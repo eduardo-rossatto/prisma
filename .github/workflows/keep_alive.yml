@@ -3,7 +3,7 @@ name: Keep Alive
 on:
   schedule:
     - cron: "0 */3 * * *"   # a cada 3 horas
-  workflow_dispatch:         # permite rodar manualmente se precisar
+  workflow_dispatch:
 
 jobs:
   ping:
@@ -11,5 +11,11 @@ jobs:
     steps:
       - name: Ping PRISMA app
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.PRISMA_APP_URL }}")
+          URL="${{ vars.PRISMA_APP_URL }}"
+          if [ -z "$URL" ]; then
+            echo "PRISMA_APP_URL não configurada — configure em Settings > Variables > Actions"
+            exit 0
+          fi
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$URL" || echo "000")
           echo "HTTP status: $STATUS"
+          echo "App pingado: $URL"
