@@ -258,17 +258,17 @@ def col_head(*labels, cols):
             unsafe_allow_html=True,
         )
 
-def sim_nao(label, key):
-    return st.selectbox(label, ["", "Sim", "Não"], key=key)
+def sim_nao(label, key, lv="visible"):
+    return st.selectbox(label, ["", "Sim", "Não"], key=key, label_visibility=lv)
 
-def nivel(label, key):
-    return st.selectbox(label, ["", "1 — Baixo", "2 — Médio", "3 — Alto"], key=key)
+def nivel(label, key, lv="visible"):
+    return st.selectbox(label, ["", "1 — Baixo", "2 — Médio", "3 — Alto"], key=key, label_visibility=lv)
 
-def s_doc(label, key):
-    return st.selectbox(label, ["", "Pendente", "Entregue", "Não se aplica"], key=key)
+def s_doc(label, key, lv="visible"):
+    return st.selectbox(label, ["", "Pendente", "Entregue", "Não se aplica"], key=key, label_visibility=lv)
 
-def s_lic(label, key):
-    return st.selectbox(label, ["", "Válida", "Vencida", "Pendente", "Não se aplica"], key=key)
+def s_lic(label, key, lv="visible"):
+    return st.selectbox(label, ["", "Válida", "Vencida", "Pendente", "Não se aplica"], key=key, label_visibility=lv)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SIDEBAR
@@ -552,7 +552,7 @@ with tabs[6]:
                 f"<div style='padding-top:10px;font-size:.85rem;color:#a09890'>{nome_lic}</div>",
                 unsafe_allow_html=True)
         with c2:
-            lic_data[f"{prefix}_status"]   = s_lic("", f"{prefix}_status")
+            lic_data[f"{prefix}_status"]   = s_lic("", f"{prefix}_status", lv="collapsed")
         with c3:
             lic_data[f"{prefix}_validade"] = st.date_input(
                 "", value=None, key=f"{prefix}_validade", label_visibility="collapsed")
@@ -603,7 +603,7 @@ with tabs[7]:
                 f"<div style='padding-top:10px;font-size:.85rem;color:#a09890'>{nome_crit}</div>",
                 unsafe_allow_html=True)
         with cr2:
-            compl_data[f"{prefix}_nivel"] = nivel("", f"{prefix}_nivel")
+            compl_data[f"{prefix}_nivel"] = nivel("", f"{prefix}_nivel", lv="collapsed")
         with cr3:
             compl_data[f"{prefix}_obs"]   = st.text_input(
                 "", key=f"{prefix}_obs", label_visibility="collapsed", placeholder="—")
@@ -625,7 +625,7 @@ with tabs[8]:
                     f"<div style='padding-top:10px;font-size:.82rem;color:#a09890'>{nome_doc}</div>",
                     unsafe_allow_html=True)
             with c2:
-                cred_data[f"{prefix}_doc{n}_status"] = s_doc("", f"{prefix}_doc{n}_status")
+                cred_data[f"{prefix}_doc{n}_status"] = s_doc("", f"{prefix}_doc{n}_status", lv="collapsed")
             with c3:
                 cred_data[f"{prefix}_doc{n}_data"]   = st.date_input(
                     "", value=None, key=f"{prefix}_doc{n}_data", label_visibility="collapsed")
