@@ -305,24 +305,6 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
 
-    st.divider()
-
-    if st.button("Gerar Ficha", type="primary", use_container_width=True):
-        st.session_state["_gerar"] = True
-
-    if "arquivo_gerado" in st.session_state:
-        st.download_button(
-            "↓  Baixar Excel",
-            data=st.session_state["arquivo_gerado"],
-            file_name=st.session_state.get("_nome_arquivo", "PRISMA.xlsx"),
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=True,
-        )
-        st.markdown("""
-        <div style="font-size:.65rem;color:#766f6b;text-align:center;margin-top:8px;
-                    letter-spacing:.04em">Arquivo pronto para download</div>
-        """, unsafe_allow_html=True)
-
     st.markdown("""
     <div style="position:fixed;bottom:28px;font-size:.6rem;color:#3a3430;
                 letter-spacing:.06em">BIOTROP · uso interno</div>
@@ -665,14 +647,54 @@ with tabs[8]:
         ], key="ctrl_status")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# GERAR FICHA
+# CTA — Gerar Ficha
+# ══════════════════════════════════════════════════════════════════════════════
+st.markdown("""
+<div style="margin-top:48px;border-top:1px solid rgba(255,255,255,0.06);
+            padding-top:40px;text-align:center">
+  <div style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:600;
+              color:#f8f8f7;margin-bottom:6px">Pronto para gerar a ficha?</div>
+  <div style="font-size:.78rem;color:#766f6b;margin-bottom:28px">
+    Preencha as seções acima e clique no botão para gerar o Excel.
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+col_l, col_btn, col_r = st.columns([2, 3, 2])
+with col_btn:
+    if st.button("Gerar Ficha", type="primary", use_container_width=True):
+        st.session_state["_gerar"] = True
+
+if "arquivo_gerado" in st.session_state:
+    st.markdown("""
+    <div style="text-align:center;margin-top:20px">
+      <div style="font-size:.72rem;color:#10e68d;letter-spacing:.06em;
+                  text-transform:uppercase;margin-bottom:12px">
+        ✓ Ficha gerada com sucesso
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+    col_l2, col_dl, col_r2 = st.columns([2, 3, 2])
+    with col_dl:
+        st.download_button(
+            "↓  Baixar Excel",
+            data=st.session_state["arquivo_gerado"],
+            file_name=st.session_state.get("_nome_arquivo", "PRISMA.xlsx"),
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True,
+        )
+
+st.markdown("<div style='margin-bottom:60px'></div>", unsafe_allow_html=True)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# LÓGICA — Gerar Ficha
 # ══════════════════════════════════════════════════════════════════════════════
 if st.session_state.get("_gerar"):
     st.session_state["_gerar"] = False
     razao = st.session_state.get("razao_social", "").strip()
 
     if not razao:
-        st.sidebar.error("Preencha a Razão Social antes de gerar.")
+        st.error("Preencha a Razão Social (aba Cadastro) antes de gerar a ficha.")
     else:
         log_obs = st.session_state.get("log_acesso_obs", "")
         data = {
@@ -756,6 +778,6 @@ if st.session_state.get("_gerar"):
             st.session_state["_nome_arquivo"]   = f"PRISMA_{razao.replace(' ', '_')}.xlsx"
             st.rerun()
         except FileNotFoundError:
-            st.sidebar.error("Template não encontrado.")
+            st.error("Template não encontrado em `template/Prisma - Template.xlsx`.")
         except Exception as e:
-            st.sidebar.error(f"Erro: {e}")
+            st.error(f"Erro ao gerar a ficha: {e}")
