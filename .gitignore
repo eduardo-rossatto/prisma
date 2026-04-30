@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.env
+venv/
+*.log
+.DS_Store
+Thumbs.db
+FICHA_TECNICA_CLIENTE_B2B.xlsx
+FICHA_TECNICA_CLIENTE_B2B.md
+gerar_ficha.py
+Melhorias PRISMA.html
+/Prisma - Template.xlsx
