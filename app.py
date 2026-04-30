@@ -347,11 +347,11 @@ with tabs[0]:
 
     c4, c5, c6 = st.columns([2, 2, 2])
     with c4:
-        st.date_input("Data de Abertura", value=None, key="data_abertura")
+        st.date_input("Data de Abertura", value=None, key="data_abertura", format="DD/MM/YYYY")
     with c5:
         st.text_input("Grupo Econômico", key="grupo_economico")
     with c6:
-        st.date_input("Cliente Desde", value=None, key="data_inicio_relacionamento")
+        st.date_input("Cliente Desde", value=None, key="data_inicio_relacionamento", format="DD/MM/YYYY")
 
     sub("Responsável Biotrop")
 
@@ -584,7 +584,7 @@ with tabs[6]:
             lic_data[f"{prefix}_status"]   = s_lic("", f"{prefix}_status", lv="collapsed")
         with c3:
             lic_data[f"{prefix}_validade"] = st.date_input(
-                "", value=None, key=f"{prefix}_validade", label_visibility="collapsed")
+                "", value=None, key=f"{prefix}_validade", label_visibility="collapsed", format="DD/MM/YYYY")
         with c4:
             lic_data[f"{prefix}_obs"]      = st.text_input(
                 "", key=f"{prefix}_obs", label_visibility="collapsed", placeholder="—")
@@ -669,7 +669,7 @@ with tabs[8]:
                 cred_data[f"{prefix}_doc{n}_status"] = s_doc("", f"{prefix}_doc{n}_status", lv="collapsed")
             with c3:
                 cred_data[f"{prefix}_doc{n}_data"]   = st.date_input(
-                    "", value=None, key=f"{prefix}_doc{n}_data", label_visibility="collapsed")
+                    "", value=None, key=f"{prefix}_doc{n}_data", label_visibility="collapsed", format="DD/MM/YYYY")
             with c4:
                 cred_data[f"{prefix}_doc{n}_obs"]    = st.text_input(
                     "", key=f"{prefix}_doc{n}_obs", label_visibility="collapsed", placeholder="—")
@@ -696,10 +696,10 @@ with tabs[8]:
     ci1, ci2, ci3 = st.columns(3)
     with ci1:
         st.text_input("Cadastro realizado por", key="ctrl_cadastrado_por")
-        st.date_input("Data do cadastro", value=date.today(), key="ctrl_data_cadastro")
+        st.date_input("Data do cadastro", value=date.today(), key="ctrl_data_cadastro", format="DD/MM/YYYY")
     with ci2:
         st.text_input("Responsável pela atualização", key="ctrl_responsavel_atualizacao")
-        st.date_input("Última atualização", value=date.today(), key="ctrl_ultima_atualizacao")
+        st.date_input("Última atualização", value=date.today(), key="ctrl_ultima_atualizacao", format="DD/MM/YYYY")
     with ci3:
         st.selectbox("Status do cadastro", [
             "", "Em preenchimento", "Completo", "Em revisão", "Aprovado",
