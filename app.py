@@ -3,141 +3,211 @@ import openpyxl
 from io import BytesIO
 from datetime import date, datetime
 
-st.set_page_config(page_title="PRISMA · Ficha Técnica do Cliente", layout="wide", page_icon="🤝")
+st.set_page_config(
+    page_title="PRISMA",
+    layout="wide",
+    page_icon="🤝",
+    initial_sidebar_state="expanded",
+)
 
 TEMPLATE_PATH = "template/Prisma - Template.xlsx"
 
-# ── CSS ───────────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# CSS — Groq-inspired dark theme
+# ══════════════════════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
+/* ── reset ── */
 html, body, [class*="css"] { font-family: 'Inter', sans-serif !important; }
+#MainMenu, footer, header, [data-testid="stDecoration"], [data-testid="stToolbar"] { display: none !important; }
 
-#MainMenu, footer, header { visibility: hidden; }
+/* ── backgrounds ── */
+.stApp,
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+[data-testid="stMainBlockContainer"],
+.main .block-container {
+    background-color: #0f0f0e !important;
+}
 
-.stApp { background-color: #f5f5f5; }
-
-/* sidebar */
+/* ── sidebar ── */
 [data-testid="stSidebar"] {
-    background-color: #0a0a0a !important;
-    padding-top: 0 !important;
+    background-color: #141312 !important;
+    border-right: 1px solid rgba(255,255,255,0.06) !important;
 }
-[data-testid="stSidebar"] * { color: #ffffff !important; }
-[data-testid="stSidebar"] hr { border-color: #2a2a2a !important; }
-[data-testid="stSidebar"] .stButton > button {
-    background-color: #ffffff !important;
-    color: #0a0a0a !important;
-    border: none !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.06em !important;
-    width: 100%;
-}
-[data-testid="stSidebar"] .stButton > button:hover {
-    background-color: #e5e5e5 !important;
-}
-[data-testid="stSidebar"] .stDownloadButton > button {
-    background-color: #1a7a4a !important;
-    color: #ffffff !important;
-    border: none !important;
-    font-weight: 600 !important;
-    width: 100%;
-}
+[data-testid="stSidebar"] section { padding: 0 20px !important; }
 
-/* tabs */
-.stTabs [data-baseweb="tab-list"] {
-    gap: 2px;
-    background-color: #ebebeb;
-    border-radius: 10px;
-    padding: 4px;
-    border-bottom: none !important;
-}
-.stTabs [data-baseweb="tab"] {
-    border-radius: 7px;
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-    color: #666 !important;
-    border: none !important;
-    background: transparent !important;
-    padding: 7px 16px !important;
-}
-.stTabs [aria-selected="true"] {
-    background-color: #ffffff !important;
-    color: #0a0a0a !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1) !important;
-}
-.stTabs [data-baseweb="tab-highlight"] { display: none; }
-.stTabs [data-baseweb="tab-border"]    { display: none; }
+/* ── text ── */
+p, span, div, li, a, [data-testid="stMarkdownContainer"] p { color: #f8f8f7 !important; }
+h1, h2, h3, h4 { color: #f8f8f7 !important; font-family: 'Space Grotesk', sans-serif !important; }
 
-/* section card */
-.sec-card {
-    background: #ffffff;
-    border-radius: 12px;
-    border: 1px solid #e8e8e8;
-    padding: 24px 28px 20px;
-    margin-bottom: 20px;
-}
-.sec-label {
-    font-size: 0.6rem;
-    font-weight: 500;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: #aaaaaa;
-    margin-bottom: 4px;
-}
-.sec-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #0a0a0a;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #f0f0f0;
-}
-.sub-label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #999999;
-    margin: 16px 0 8px;
-}
-.table-header {
-    display: grid;
-    gap: 8px;
-    padding: 8px 4px;
-    border-bottom: 1px solid #eeeeee;
-    margin-bottom: 4px;
-}
-.table-header span {
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #aaaaaa;
-}
-
-/* inputs */
+/* ── labels ── */
+label,
+[data-testid="stWidgetLabel"] > div,
+[data-testid="stWidgetLabel"] p,
 [data-testid="stTextInput"] label,
 [data-testid="stSelectbox"] label,
-[data-testid="stDateInput"] label,
 [data-testid="stTextArea"] label,
+[data-testid="stDateInput"] label,
 [data-testid="stNumberInput"] label {
+    color: #766f6b !important;
+    font-size: 0.68rem !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+/* ── inputs ── */
+input[type="text"], input[type="number"], input[type="email"],
+input[type="date"], input[type="time"], textarea {
+    background-color: #1e1d1b !important;
+    border: 1px solid rgba(255,255,255,0.09) !important;
+    border-radius: 8px !important;
+    color: #f8f8f7 !important;
+    font-size: 0.86rem !important;
+    font-family: 'Inter', sans-serif !important;
+    transition: border-color .15s ease !important;
+}
+input:focus, textarea:focus {
+    border-color: rgba(244,62,1,.45) !important;
+    box-shadow: 0 0 0 3px rgba(244,62,1,.08) !important;
+    outline: none !important;
+}
+
+/* CNPJ / CEP / CNAE — monospace */
+[data-testid="stTextInput"]:has(input[aria-label*="CNPJ"]) input,
+[data-testid="stTextInput"]:has(input[aria-label*="CEP"]) input,
+[data-testid="stTextInput"]:has(input[aria-label*="CNAE"]) input {
+    font-family: 'IBM Plex Mono', monospace !important;
+    letter-spacing: .05em !important;
+}
+
+/* ── selectbox ── */
+[data-baseweb="select"] > div {
+    background-color: #1e1d1b !important;
+    border-color: rgba(255,255,255,0.09) !important;
+    border-radius: 8px !important;
+    color: #f8f8f7 !important;
+}
+[data-baseweb="select"] [data-testid="stMarkdownContainer"] p,
+[data-baseweb="select"] span { color: #f8f8f7 !important; font-size: .86rem !important; }
+[data-baseweb="popover"],
+[data-baseweb="popover"] ul,
+[data-baseweb="popover"] [role="listbox"] {
+    background-color: #201f1d !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 10px !important;
+}
+[data-baseweb="popover"] [role="option"] { color: #f8f8f7 !important; }
+[data-baseweb="popover"] [role="option"]:hover { background-color: rgba(244,62,1,.12) !important; }
+[data-baseweb="popover"] [aria-selected="true"] { background-color: rgba(244,62,1,.18) !important; }
+
+/* ── date input ── */
+[data-testid="stDateInputField"] input { color: #f8f8f7 !important; }
+
+/* ── tabs ── */
+.stTabs [data-baseweb="tab-list"] {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255,255,255,0.07) !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    margin-bottom: 28px !important;
+}
+.stTabs [data-baseweb="tab"] {
+    background: transparent !important;
+    color: #5a5450 !important;
     font-size: 0.75rem !important;
     font-weight: 500 !important;
-    color: #555555 !important;
-    letter-spacing: 0.02em !important;
+    letter-spacing: .06em !important;
+    text-transform: uppercase !important;
+    border-radius: 0 !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    padding: 10px 18px !important;
+    margin-bottom: -1px !important;
+    transition: color .15s ease !important;
 }
-input, textarea, [data-baseweb="select"] > div {
-    border-radius: 7px !important;
-    border-color: #e0e0e0 !important;
-    font-size: 0.85rem !important;
+.stTabs [aria-selected="true"] {
+    color: #f8f8f7 !important;
+    border-bottom-color: #f43e01 !important;
 }
-input:focus, textarea:focus { border-color: #0a0a0a !important; box-shadow: none !important; }
+.stTabs [data-baseweb="tab"]:hover { color: #a09890 !important; background: transparent !important; }
+.stTabs [data-baseweb="tab-highlight"],
+.stTabs [data-baseweb="tab-border"] { display: none !important; }
+.stTabs [data-baseweb="tab-panel"] { padding: 0 !important; }
+
+/* ── buttons ── */
+.stButton > button {
+    background: transparent !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    color: #f8f8f7 !important;
+    border-radius: 9999px !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    letter-spacing: .08em !important;
+    text-transform: uppercase !important;
+    padding: 8px 20px !important;
+    transition: all .15s ease !important;
+}
+.stButton > button:hover {
+    border-color: rgba(255,255,255,.3) !important;
+    background: rgba(255,255,255,.04) !important;
+}
+.stButton > button[kind="primary"] {
+    background: #f43e01 !important;
+    border-color: #f43e01 !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+}
+.stButton > button[kind="primary"]:hover {
+    background: #d93500 !important;
+    border-color: #d93500 !important;
+}
+.stDownloadButton > button {
+    background: rgba(16,230,141,.08) !important;
+    border: 1px solid rgba(16,230,141,.25) !important;
+    color: #10e68d !important;
+    border-radius: 9999px !important;
+    font-size: .75rem !important;
+    font-weight: 600 !important;
+    letter-spacing: .08em !important;
+    text-transform: uppercase !important;
+    width: 100% !important;
+    transition: all .15s ease !important;
+}
+.stDownloadButton > button:hover {
+    background: rgba(16,230,141,.14) !important;
+    border-color: rgba(16,230,141,.45) !important;
+}
+
+/* ── dividers ── */
+hr { border-color: rgba(255,255,255,0.06) !important; margin: 16px 0 !important; }
+
+/* ── alerts ── */
+[data-testid="stAlert"] {
+    background: rgba(244,62,1,.08) !important;
+    border: 1px solid rgba(244,62,1,.2) !important;
+    border-radius: 8px !important;
+    color: #f8f8f7 !important;
+}
+[data-testid="stAlert"][data-baseweb="notification"][kind="success"],
+[data-testid="stNotification"] {
+    background: rgba(16,230,141,.08) !important;
+    border-color: rgba(16,230,141,.2) !important;
+}
+
+/* ── scrollbar ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── helpers ───────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# HELPERS
+# ══════════════════════════════════════════════════════════════════════════════
 
 def fmt_date(d):
     if not d:
@@ -161,16 +231,32 @@ def fill_template(data: dict) -> bytes:
     buf.seek(0)
     return buf.getvalue()
 
-def card_open(label, title):
+def sec(num_or_label, title, desc=""):
+    """Section header — Groq style."""
     st.markdown(f"""
-    <div class="sec-card">
-      <div class="sec-label">{label}</div>
-      <div class="sec-title">{title}</div>
+    <div style="margin:4px 0 28px">
+      <div style="font-size:.6rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+                  color:#766f6b;margin-bottom:10px">{num_or_label}</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:1.35rem;font-weight:600;
+                  color:#f8f8f7;letter-spacing:-.015em;line-height:1.2">{title}</div>
+      {"" if not desc else f'<div style="font-size:.8rem;color:#766f6b;margin-top:6px;line-height:1.6">{desc}</div>'}
+      <div style="width:100%;height:1px;background:rgba(255,255,255,.06);margin-top:20px"></div>
     </div>
     """, unsafe_allow_html=True)
 
-def sub(text):
-    st.markdown(f'<div class="sub-label">{text}</div>', unsafe_allow_html=True)
+def sub(label):
+    st.markdown(f"""
+    <div style="font-size:.6rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+                color:#5a5450;margin:22px 0 10px;padding-left:1px">{label}</div>
+    """, unsafe_allow_html=True)
+
+def col_head(*labels, cols):
+    for col, lbl in zip(cols, labels):
+        col.markdown(
+            f"<div style='font-size:.6rem;font-weight:600;letter-spacing:.14em;"
+            f"text-transform:uppercase;color:#5a5450;padding-bottom:6px'>{lbl}</div>",
+            unsafe_allow_html=True,
+        )
 
 def sim_nao(label, key):
     return st.selectbox(label, ["", "Sim", "Não"], key=key)
@@ -178,108 +264,115 @@ def sim_nao(label, key):
 def nivel(label, key):
     return st.selectbox(label, ["", "1 — Baixo", "2 — Médio", "3 — Alto"], key=key)
 
-def status_doc(label, key):
+def s_doc(label, key):
     return st.selectbox(label, ["", "Pendente", "Entregue", "Não se aplica"], key=key)
 
-def status_lic(label, key):
+def s_lic(label, key):
     return st.selectbox(label, ["", "Válida", "Vencida", "Pendente", "Não se aplica"], key=key)
 
-# ── sidebar ───────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# SIDEBAR
+# ══════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown("""
-    <div style='padding:32px 0 8px;text-align:center'>
-      <div style='font-size:1.8rem;font-weight:200;letter-spacing:.2em'>PRISMA</div>
-      <div style='font-size:0.6rem;color:#555;letter-spacing:.1em;margin-top:4px'>
-        FICHA TÉCNICA DO CLIENTE
-      </div>
+    <div style="padding:32px 0 24px">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;
+                  letter-spacing:.12em;color:#f8f8f7">PRISMA</div>
+      <div style="font-size:.58rem;color:#5a5450;letter-spacing:.14em;
+                  text-transform:uppercase;margin-top:5px">Ficha Técnica do Cliente</div>
     </div>
     """, unsafe_allow_html=True)
 
     st.divider()
 
-    st.markdown("""
-    <div style='font-size:0.65rem;color:#555;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px'>
-      Seções
-    </div>
-    """, unsafe_allow_html=True)
-
-    secoes = [
-        "Cadastro",
-        "Endereços",
-        "Contatos",
-        "Perfil",
-        "Comercial",
-        "Regras",
-        "Licenças",
-        "Estratégico",
-        "Crédito",
+    nav = [
+        ("01", "Cadastro"),
+        ("02", "Endereços"),
+        ("03", "Contatos"),
+        ("04", "Perfil"),
+        ("05", "Comercial"),
+        ("06", "Regras"),
+        ("07", "Licenças"),
+        ("08", "Estratégico"),
+        ("09", "Crédito"),
     ]
-    for s in secoes:
-        st.markdown(f"<div style='font-size:0.8rem;padding:4px 0;color:#888'>· {s}</div>",
-                    unsafe_allow_html=True)
+    for num, label in nav:
+        st.markdown(f"""
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 0">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:.58rem;
+                       color:#3a3430;font-weight:500">{num}</span>
+          <span style="font-size:.78rem;color:#766f6b;font-weight:400">{label}</span>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.divider()
 
-    if st.button("Gerar Ficha", use_container_width=True):
+    if st.button("Gerar Ficha", type="primary", use_container_width=True):
         st.session_state["_gerar"] = True
 
     if "arquivo_gerado" in st.session_state:
-        nome = st.session_state.get("nome_arquivo", "PRISMA.xlsx")
         st.download_button(
-            "⬇ Baixar Excel",
+            "↓  Baixar Excel",
             data=st.session_state["arquivo_gerado"],
-            file_name=nome,
+            file_name=st.session_state.get("_nome_arquivo", "PRISMA.xlsx"),
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True,
         )
+        st.markdown("""
+        <div style="font-size:.65rem;color:#766f6b;text-align:center;margin-top:8px;
+                    letter-spacing:.04em">Arquivo pronto para download</div>
+        """, unsafe_allow_html=True)
 
-    st.divider()
     st.markdown("""
-    <div style='font-size:0.62rem;color:#444;text-align:center;padding-bottom:16px'>
-      BIOTROP · uso interno
-    </div>
+    <div style="position:fixed;bottom:28px;font-size:.6rem;color:#3a3430;
+                letter-spacing:.06em">BIOTROP · uso interno</div>
     """, unsafe_allow_html=True)
 
-# ── tabs ──────────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# TABS
+# ══════════════════════════════════════════════════════════════════════════════
 tabs = st.tabs(["Cadastro", "Endereços", "Contatos", "Perfil",
                 "Comercial", "Regras", "Licenças", "Estratégico", "Crédito"])
 
-# ═══════════════════════════════════════════════════════
-# 1 · CADASTRO
-# ═══════════════════════════════════════════════════════
+# ─────────────────────────────────────────────
+# 01 · CADASTRO
+# ─────────────────────────────────────────────
 with tabs[0]:
-    st.markdown('<div class="sec-card"><div class="sec-label">Bloco 1</div><div class="sec-title">Dados Cadastrais</div></div>', unsafe_allow_html=True)
+    sec("Bloco 01", "Dados Cadastrais",
+        "Identificação legal e fiscal do cliente.")
 
-    c1, c2 = st.columns(2)
+    c1, c2, c3 = st.columns([3, 3, 2])
     with c1:
         st.text_input("Razão Social", key="razao_social")
         st.text_input("CNPJ", placeholder="00.000.000/0000-00", key="cnpj")
-        st.text_input("Inscrição Estadual", key="inscricao_estadual")
-        st.text_input("Inscrição Municipal", key="inscricao_municipal")
     with c2:
         st.text_input("Nome Fantasia", key="nome_fantasia")
         st.text_input("CNAE", placeholder="0000-0/00", key="cnae")
+    with c3:
+        st.text_input("Inscrição Estadual", key="inscricao_estadual")
+        st.text_input("Inscrição Municipal", key="inscricao_municipal")
+
+    c4, c5, c6 = st.columns([2, 2, 2])
+    with c4:
         st.date_input("Data de Abertura", value=None, key="data_abertura")
+    with c5:
         st.text_input("Grupo Econômico", key="grupo_economico")
+    with c6:
+        st.date_input("Cliente Desde", value=None, key="data_inicio_relacionamento")
 
-    st.date_input("Cliente Desde", value=None, key="data_inicio_relacionamento",
-                  help="Data de início do relacionamento com a Biotrop")
-
-    st.markdown('<div class="sec-card" style="margin-top:20px"><div class="sec-label">Responsável</div><div class="sec-title">Responsável Biotrop pelo Cliente</div></div>', unsafe_allow_html=True)
+    sub("Responsável Biotrop")
 
     rb1, rb2, rb3 = st.columns(3)
-    with rb1:
-        st.text_input("Nome completo", key="ctrl_responsavel_biotrop")
-    with rb2:
-        st.text_input("E-mail", key="ctrl_responsavel_biotrop_email")
-    with rb3:
-        st.text_input("Telefone", key="ctrl_responsavel_biotrop_tel")
+    with rb1: st.text_input("Nome completo", key="ctrl_responsavel_biotrop")
+    with rb2: st.text_input("E-mail", key="ctrl_responsavel_biotrop_email")
+    with rb3: st.text_input("Telefone", key="ctrl_responsavel_biotrop_tel")
 
-# ═══════════════════════════════════════════════════════
-# 2 · ENDEREÇOS
-# ═══════════════════════════════════════════════════════
+# ─────────────────────────────────────────────
+# 02 · ENDEREÇOS
+# ─────────────────────────────────────────────
 with tabs[1]:
-    st.markdown('<div class="sec-card"><div class="sec-label">Bloco 2</div><div class="sec-title">Endereços</div></div>', unsafe_allow_html=True)
+    sec("Bloco 02", "Endereços",
+        "Endereço fiscal e pontos de entrega.")
 
     sub("Endereço Fiscal")
     e1, e2, e3 = st.columns([5, 1, 2])
@@ -295,126 +388,150 @@ with tabs[1]:
 
     sub("Endereços de Entrega")
     entregas = {}
-    for n in range(1, 5):
-        ec1, ec2, ec3 = st.columns([2, 3, 4])
-        with ec1:
-            entregas[f"end_entrega_{n}_id"] = st.text_input(
-                f"Unidade {n}", key=f"end_entrega_{n}_id")
-        with ec2:
-            entregas[f"end_entrega_{n}_municipio_estado"] = st.text_input(
-                "Município / Estado", key=f"end_entrega_{n}_municipio_estado",
-                label_visibility="visible" if n == 1 else "collapsed")
-        with ec3:
-            entregas[f"end_entrega_{n}_obs"] = st.text_input(
-                "Observações", key=f"end_entrega_{n}_obs",
-                label_visibility="visible" if n == 1 else "collapsed")
+    h1, h2, h3, h4 = st.columns([1, 2, 3, 4])
+    col_head("Opção", "Identificação", "Município / Estado", "Observações",
+             cols=[h1, h2, h3, h4])
 
-# ═══════════════════════════════════════════════════════
-# 3 · CONTATOS
-# ═══════════════════════════════════════════════════════
+    for n in range(1, 5):
+        ec1, ec2, ec3, ec4 = st.columns([1, 2, 3, 4])
+        with ec1:
+            st.markdown(f"<div style='padding-top:10px;font-family:IBM Plex Mono,monospace;"
+                        f"font-size:.75rem;color:#5a5450'>0{n}</div>", unsafe_allow_html=True)
+        with ec2:
+            entregas[f"end_entrega_{n}_id"] = st.text_input(
+                "", key=f"end_entrega_{n}_id", label_visibility="collapsed",
+                placeholder="Nome da unidade")
+        with ec3:
+            entregas[f"end_entrega_{n}_municipio_estado"] = st.text_input(
+                "", key=f"end_entrega_{n}_municipio_estado", label_visibility="collapsed",
+                placeholder="Cidade / UF")
+        with ec4:
+            entregas[f"end_entrega_{n}_obs"] = st.text_input(
+                "", key=f"end_entrega_{n}_obs", label_visibility="collapsed",
+                placeholder="—")
+
+# ─────────────────────────────────────────────
+# 03 · CONTATOS
+# ─────────────────────────────────────────────
 with tabs[2]:
-    st.markdown('<div class="sec-card"><div class="sec-label">Bloco 3</div><div class="sec-title">Contatos</div></div>', unsafe_allow_html=True)
+    sec("Bloco 03", "Contatos",
+        "Dois contatos por área: comercial, financeiro, técnico e logística.")
 
     contatos = {}
     grupos = [
-        ("Contato Comercial",           "com"),
-        ("Contato Financeiro",          "fin"),
-        ("Responsável Técnico",         "tec"),
-        ("Responsável pela Logística",  "log"),
+        ("Comercial",             "com"),
+        ("Financeiro",            "fin"),
+        ("Responsável Técnico",   "tec"),
+        ("Logística",             "log"),
     ]
-
     for g_label, prefix in grupos:
         sub(g_label)
+        h1, h2, h3, h4, h5 = st.columns([1, 3, 2, 2, 3])
+        col_head("", "Nome", "Cargo", "Tel / Whatsapp", "E-mail",
+                 cols=[h1, h2, h3, h4, h5])
         for idx in (1, 2):
-            cc1, cc2, cc3, cc4 = st.columns(4)
-            lv = "visible" if idx == 1 else "collapsed"
-            with cc1:
-                contatos[f"{prefix}{idx}_nome"]  = st.text_input("Nome",          key=f"{prefix}{idx}_nome",  label_visibility=lv)
-            with cc2:
-                contatos[f"{prefix}{idx}_cargo"] = st.text_input("Cargo",         key=f"{prefix}{idx}_cargo", label_visibility=lv)
-            with cc3:
-                contatos[f"{prefix}{idx}_tel"]   = st.text_input("Tel/Whatsapp",  key=f"{prefix}{idx}_tel",   label_visibility=lv)
-            with cc4:
-                contatos[f"{prefix}{idx}_email"] = st.text_input("E-mail",        key=f"{prefix}{idx}_email", label_visibility=lv)
+            ic1, ic2, ic3, ic4, ic5 = st.columns([1, 3, 2, 2, 3])
+            with ic1:
+                st.markdown(f"<div style='padding-top:10px;font-family:IBM Plex Mono,monospace;"
+                            f"font-size:.7rem;color:#5a5450'>{idx}°</div>",
+                            unsafe_allow_html=True)
+            with ic2:
+                contatos[f"{prefix}{idx}_nome"]  = st.text_input("", key=f"{prefix}{idx}_nome",  label_visibility="collapsed", placeholder="—")
+            with ic3:
+                contatos[f"{prefix}{idx}_cargo"] = st.text_input("", key=f"{prefix}{idx}_cargo", label_visibility="collapsed", placeholder="—")
+            with ic4:
+                contatos[f"{prefix}{idx}_tel"]   = st.text_input("", key=f"{prefix}{idx}_tel",   label_visibility="collapsed", placeholder="—")
+            with ic5:
+                contatos[f"{prefix}{idx}_email"] = st.text_input("", key=f"{prefix}{idx}_email", label_visibility="collapsed", placeholder="—")
 
-# ═══════════════════════════════════════════════════════
-# 4 · PERFIL
-# ═══════════════════════════════════════════════════════
+# ─────────────────────────────────────────────
+# 04 · PERFIL
+# ─────────────────────────────────────────────
 with tabs[3]:
-    st.markdown('<div class="sec-card"><div class="sec-label">Bloco 4</div><div class="sec-title">Perfil do Cliente</div></div>', unsafe_allow_html=True)
+    sec("Bloco 04", "Perfil do Cliente",
+        "Caracterização do negócio e relação com os produtos Biotrop.")
 
-    p1, p2 = st.columns(2)
+    p1, p2, p3 = st.columns([2, 2, 3])
     with p1:
         st.selectbox("Tipo de cliente", [
             "", "Distribuidor", "Revendedor", "Cooperativa",
             "Produtor Rural", "Importador", "Outro",
         ], key="tipo_cliente")
         st.text_input("Área Total (ha)", key="area_total_ha")
-        st.text_input("Região de Atuação", key="regiao_atuacao")
     with p2:
         st.text_input("Culturas Principais", key="culturas_principais")
-        st.text_area("Produtos Biotrop que já compra", height=120, key="produtos_utilizados")
+        st.text_input("Região de Atuação", key="regiao_atuacao")
+    with p3:
+        st.text_area("Produtos Biotrop que já compra", height=112, key="produtos_utilizados",
+                     placeholder="Liste os produtos já utilizados pelo cliente…")
 
-# ═══════════════════════════════════════════════════════
-# 5 · COMERCIAL
-# ═══════════════════════════════════════════════════════
+# ─────────────────────────────────────────────
+# 05 · COMERCIAL
+# ─────────────────────────────────────────────
 with tabs[4]:
-    st.markdown('<div class="sec-card"><div class="sec-label">Bloco 5</div><div class="sec-title">Condições Comerciais e Financeiras</div></div>', unsafe_allow_html=True)
+    sec("Bloco 05", "Condições Comerciais e Financeiras",
+        "Pagamento, crédito e política de bonificação.")
 
-    cc1, cc2 = st.columns(2)
-    with cc1:
+    c1, c2, c3 = st.columns(3)
+    with c1:
         st.text_input("Condição de Pagamento", placeholder="ex: 30/60/90 DDL", key="condicao_pagamento")
         st.text_input("Prazo Médio (dias)", key="prazo_medio_dias")
+    with c2:
         st.text_input("Limite de Crédito (R$)", key="limite_credito")
-    with cc2:
         st.selectbox("Forma de Pagamento", [
             "", "Boleto", "PIX", "Transferência Bancária", "Cheque", "Cartão", "Misto",
         ], key="forma_pagamento")
-        st.text_area("Política de Bonificação", height=106, key="politica_bonificacao")
+    with c3:
+        st.text_area("Política de Bonificação", height=112, key="politica_bonificacao")
 
-    st.text_area("Condições Comerciais Especiais", height=80, key="condicoes_especiais")
+    st.text_area("Condições Comerciais Especiais", height=72,
+                 key="condicoes_especiais", placeholder="—")
 
-# ═══════════════════════════════════════════════════════
-# 6 · REGRAS (Faturamento + Logística)
-# ═══════════════════════════════════════════════════════
+# ─────────────────────────────────────────────
+# 06 · REGRAS
+# ─────────────────────────────────────────────
 with tabs[5]:
-    st.markdown('<div class="sec-card"><div class="sec-label">Bloco 6</div><div class="sec-title">Regras de Faturamento</div></div>', unsafe_allow_html=True)
+    sec("Bloco 06", "Regras de Faturamento e Logística",
+        "Requisitos operacionais para emissão de nota e entrega.")
 
-    f1, f2 = st.columns(2)
-    with f1:
-        st.text_input("Data limite para faturamento", placeholder="ex: dia 20", key="fat_data_limite")
-        sim_nao("Exige pedido formal (PO)?",         "fat_exige_po")
-        sim_nao("Exige Contrato?",                   "fat_exige_contrato")
-        sim_nao("Exige Conferência Prévia de NF?",   "fat_conferencia_nf")
-    with f2:
-        st.text_input("Prazo de Envio para NF", placeholder="ex: 48h antes do embarque", key="fat_prazo_nf")
-        st.text_input("Shelf life mínimo do cliente", placeholder="ex: 12 meses", key="fat_shelf_life")
-        st.text_area("Observações de Faturamento", height=94, key="fat_observacoes")
+    sub("Faturamento")
+    f1, f2, f3, f4 = st.columns([2, 1, 1, 1])
+    with f1: st.text_input("Data limite para faturamento", placeholder="ex: dia 20", key="fat_data_limite")
+    with f2: sim_nao("Exige PO?",             "fat_exige_po")
+    with f3: sim_nao("Exige Contrato?",        "fat_exige_contrato")
+    with f4: sim_nao("Conferência de NF?",     "fat_conferencia_nf")
 
-    st.markdown('<div class="sec-card" style="margin-top:20px"><div class="sec-label">Bloco 7</div><div class="sec-title">Regras Logísticas</div></div>', unsafe_allow_html=True)
+    f5, f6, f7 = st.columns([2, 2, 3])
+    with f5: st.text_input("Prazo de Envio para NF", placeholder="ex: 48h antes", key="fat_prazo_nf")
+    with f6: st.text_input("Shelf life mínimo", placeholder="ex: 12 meses", key="fat_shelf_life")
+    with f7: st.text_area("Observações de Faturamento", height=72, key="fat_observacoes", placeholder="—")
 
-    l1, l2 = st.columns(2)
-    with l1:
-        st.selectbox("Tipo de entrega", ["", "CIF", "FOB", "CIF e FOB"], key="log_tipo_entrega")
-        sim_nao("Necessita Agendamento?",             "log_agendamento")
-        st.text_input("Prazo Mínimo para Agendamento", placeholder="ex: 48h", key="log_prazo_agendamento")
-        st.text_input("Dias de Recebimento",           placeholder="ex: Seg a Sex", key="log_dias_recebimento")
-        st.text_input("Horário de Recebimento",        placeholder="ex: 07h às 17h", key="log_horario_recebimento")
-        sim_nao("Avisar antes da Entrega?",            "log_aviso_entrega")
-        st.text_input("Antecedência para Aviso (h)",   key="log_antecedencia_aviso")
-    with l2:
-        sim_nao("Exige Envio Antecipado de NF?",       "log_nf_antecipada")
-        st.text_input("Antecedência de NF (h)",        key="log_antecedencia_nf")
-        sim_nao("Exige Romaneio?",                     "log_romaneio")
-        st.text_input("Restrição de Transportadora",   key="log_restricao_transportadora")
-        st.text_area("Regras de Acesso (EPI, docs)",   height=80,  key="log_regras_acesso")
-        st.text_area("Observações Logísticas",         height=80,  key="log_observacoes")
+    sub("Logística")
+    l1, l2, l3, l4, l5 = st.columns([2, 1, 2, 1, 2])
+    with l1: st.selectbox("Tipo de entrega", ["", "CIF", "FOB", "CIF e FOB"], key="log_tipo_entrega")
+    with l2: sim_nao("Agendamento?",           "log_agendamento")
+    with l3: st.text_input("Prazo mínimo agendamento", placeholder="ex: 48h", key="log_prazo_agendamento")
+    with l4: sim_nao("Aviso?",                 "log_aviso_entrega")
+    with l5: st.text_input("Antecedência aviso (h)", key="log_antecedencia_aviso")
 
-# ═══════════════════════════════════════════════════════
-# 7 · LICENÇAS
-# ═══════════════════════════════════════════════════════
+    l6, l7, l8, l9 = st.columns([2, 2, 1, 1])
+    with l6: st.text_input("Dias de recebimento", placeholder="ex: Seg a Sex", key="log_dias_recebimento")
+    with l7: st.text_input("Horário de recebimento", placeholder="ex: 07h–17h", key="log_horario_recebimento")
+    with l8: sim_nao("NF antecipada?",         "log_nf_antecipada")
+    with l9: st.text_input("Antecedência NF (h)", key="log_antecedencia_nf")
+
+    l10, l11, l12 = st.columns([1, 2, 4])
+    with l10: sim_nao("Romaneio?",             "log_romaneio")
+    with l11: st.text_input("Restrição transportadora", key="log_restricao_transportadora")
+    with l12: st.text_area("Regras de acesso / EPI / Observações", height=72,
+                            key="log_acesso_obs", placeholder="—")
+
+# ─────────────────────────────────────────────
+# 07 · LICENÇAS
+# ─────────────────────────────────────────────
 with tabs[6]:
-    st.markdown('<div class="sec-card"><div class="sec-label">Bloco 8</div><div class="sec-title">Licenças e Documentação</div></div>', unsafe_allow_html=True)
+    sec("Bloco 07", "Licenças e Documentação",
+        "Status de validade das licenças regulatórias do cliente.")
 
     lic_data = {}
     licencas = [
@@ -425,53 +542,52 @@ with tabs[6]:
         ("Certificação ISO",    "lic_iso"),
     ]
 
-    hd1, hd2, hd3, hd4 = st.columns([3, 2, 2, 3])
-    hd1.markdown("<div style='font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa'>Documento</div>", unsafe_allow_html=True)
-    hd2.markdown("<div style='font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa'>Status</div>", unsafe_allow_html=True)
-    hd3.markdown("<div style='font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa'>Validade</div>", unsafe_allow_html=True)
-    hd4.markdown("<div style='font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa'>Observações</div>", unsafe_allow_html=True)
+    hd = st.columns([3, 2, 2, 4])
+    col_head("Documento", "Status", "Validade", "Observações", cols=hd)
 
     for nome_lic, prefix in licencas:
-        c1, c2, c3, c4 = st.columns([3, 2, 2, 3])
+        c1, c2, c3, c4 = st.columns([3, 2, 2, 4])
         with c1:
-            st.markdown(f"<div style='padding-top:10px;font-size:.85rem;color:#333'>{nome_lic}</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div style='padding-top:10px;font-size:.85rem;color:#a09890'>{nome_lic}</div>",
+                unsafe_allow_html=True)
         with c2:
-            lic_data[f"{prefix}_status"]   = status_lic("", f"{prefix}_status")
+            lic_data[f"{prefix}_status"]   = s_lic("", f"{prefix}_status")
         with c3:
-            lic_data[f"{prefix}_validade"] = st.date_input("", value=None, key=f"{prefix}_validade", label_visibility="collapsed")
+            lic_data[f"{prefix}_validade"] = st.date_input(
+                "", value=None, key=f"{prefix}_validade", label_visibility="collapsed")
         with c4:
-            lic_data[f"{prefix}_obs"]      = st.text_input("", key=f"{prefix}_obs", label_visibility="collapsed")
+            lic_data[f"{prefix}_obs"]      = st.text_input(
+                "", key=f"{prefix}_obs", label_visibility="collapsed", placeholder="—")
 
-# ═══════════════════════════════════════════════════════
-# 8 · ESTRATÉGICO (Informações + Complexidade)
-# ═══════════════════════════════════════════════════════
+# ─────────────────────────────────────────────
+# 08 · ESTRATÉGICO
+# ─────────────────────────────────────────────
 with tabs[7]:
-    st.markdown('<div class="sec-card"><div class="sec-label">Bloco 9</div><div class="sec-title">Informações Estratégicas</div></div>', unsafe_allow_html=True)
+    sec("Bloco 08", "Informações Estratégicas e Complexidade",
+        "Inteligência competitiva e avaliação operacional do cliente.")
 
-    es1, es2 = st.columns(2)
+    sub("Informações Estratégicas")
+    es1, es2, es3 = st.columns(3)
     with es1:
-        st.text_area("Concorrentes que o cliente utiliza", height=100, key="estrat_concorrentes")
-        st.text_input("Potencial de Volume Estimado", placeholder="ex: 500 t/ano", key="estrat_potencial_volume")
-        st.text_input("Participação Estimada (%)", placeholder="ex: 30%", key="estrat_participacao")
+        st.text_area("Concorrentes utilizados", height=100, key="estrat_concorrentes", placeholder="—")
+        st.text_input("Potencial de volume estimado", placeholder="ex: 500 t/ano", key="estrat_potencial_volume")
     with es2:
-        st.text_area("Histórico de Relacionamentos", height=100, key="estrat_historico")
-        st.selectbox("Classificação de Risco", ["", "Baixo", "Médio", "Alto"], key="estrat_risco")
-        st.text_area("Observações Estratégicas", height=80, key="estrat_observacoes")
+        st.text_area("Histórico de relacionamentos", height=100, key="estrat_historico", placeholder="—")
+        st.text_input("Participação estimada (%)", placeholder="ex: 30%", key="estrat_participacao")
+    with es3:
+        st.selectbox("Classificação de risco", ["", "Baixo", "Médio", "Alto"], key="estrat_risco")
+        st.text_area("Observações estratégicas", height=100, key="estrat_observacoes", placeholder="—")
 
-    st.markdown('<div class="sec-card" style="margin-top:20px"><div class="sec-label">Bloco 10</div><div class="sec-title">Complexidade Operacional</div></div>', unsafe_allow_html=True)
-
-    co1, co2 = st.columns(2)
+    sub("Complexidade Operacional")
+    co1, co2 = st.columns([2, 5])
     with co1:
         st.selectbox("Classificação Geral", ["", "Baixa", "Média", "Alta"], key="compl_classificacao")
     with co2:
-        st.text_area("Justificativa", height=80, key="compl_justificativa")
+        st.text_area("Justificativa", height=72, key="compl_justificativa", placeholder="—")
 
-    sub("Critérios de Avaliação — 1 = Baixo · 2 = Médio · 3 = Alto")
-
-    hd1, hd2, hd3 = st.columns([4, 1, 4])
-    hd1.markdown("<div style='font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa'>Critério</div>", unsafe_allow_html=True)
-    hd2.markdown("<div style='font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa'>Nível</div>", unsafe_allow_html=True)
-    hd3.markdown("<div style='font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa'>Observação</div>", unsafe_allow_html=True)
+    hd = st.columns([4, 1, 4])
+    col_head("Critério", "Nível (1–3)", "Observação", cols=hd)
 
     compl_data = {}
     criterios = [
@@ -483,37 +599,41 @@ with tabs[7]:
     for nome_crit, prefix in criterios:
         cr1, cr2, cr3 = st.columns([4, 1, 4])
         with cr1:
-            st.markdown(f"<div style='padding-top:10px;font-size:.85rem;color:#333'>{nome_crit}</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div style='padding-top:10px;font-size:.85rem;color:#a09890'>{nome_crit}</div>",
+                unsafe_allow_html=True)
         with cr2:
             compl_data[f"{prefix}_nivel"] = nivel("", f"{prefix}_nivel")
         with cr3:
-            compl_data[f"{prefix}_obs"]   = st.text_input("", key=f"{prefix}_obs", label_visibility="collapsed", placeholder="Observação")
+            compl_data[f"{prefix}_obs"]   = st.text_input(
+                "", key=f"{prefix}_obs", label_visibility="collapsed", placeholder="—")
 
-# ═══════════════════════════════════════════════════════
-# 9 · CRÉDITO + CONTROLE
-# ═══════════════════════════════════════════════════════
+# ─────────────────────────────────────────────
+# 09 · CRÉDITO + CONTROLE
+# ─────────────────────────────────────────────
 with tabs[8]:
     cred_data = {}
 
-    def render_docs(prefix, titulo, bloco, docs):
-        st.markdown(f'<div class="sec-card"><div class="sec-label">Bloco {bloco}</div><div class="sec-title">{titulo}</div></div>', unsafe_allow_html=True)
-        hd1, hd2, hd3, hd4 = st.columns([5, 2, 2, 3])
-        hd1.markdown("<div style='font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa'>Documento</div>", unsafe_allow_html=True)
-        hd2.markdown("<div style='font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa'>Status</div>", unsafe_allow_html=True)
-        hd3.markdown("<div style='font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa'>Data de Entrega</div>", unsafe_allow_html=True)
-        hd4.markdown("<div style='font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa'>Observações</div>", unsafe_allow_html=True)
+    def render_docs(prefix, bloco, titulo, docs):
+        sec(f"Bloco {bloco}", titulo)
+        hd = st.columns([5, 2, 2, 3])
+        col_head("Documento", "Status", "Data de entrega", "Observações", cols=hd)
         for n, nome_doc in enumerate(docs, start=1):
             c1, c2, c3, c4 = st.columns([5, 2, 2, 3])
             with c1:
-                st.markdown(f"<div style='padding-top:10px;font-size:.82rem;color:#333'>{nome_doc}</div>", unsafe_allow_html=True)
+                st.markdown(
+                    f"<div style='padding-top:10px;font-size:.82rem;color:#a09890'>{nome_doc}</div>",
+                    unsafe_allow_html=True)
             with c2:
-                cred_data[f"{prefix}_doc{n}_status"] = status_doc("", f"{prefix}_doc{n}_status")
+                cred_data[f"{prefix}_doc{n}_status"] = s_doc("", f"{prefix}_doc{n}_status")
             with c3:
-                cred_data[f"{prefix}_doc{n}_data"] = st.date_input("", value=None, key=f"{prefix}_doc{n}_data", label_visibility="collapsed")
+                cred_data[f"{prefix}_doc{n}_data"]   = st.date_input(
+                    "", value=None, key=f"{prefix}_doc{n}_data", label_visibility="collapsed")
             with c4:
-                cred_data[f"{prefix}_doc{n}_obs"] = st.text_input("", key=f"{prefix}_doc{n}_obs", label_visibility="collapsed")
+                cred_data[f"{prefix}_doc{n}_obs"]    = st.text_input(
+                    "", key=f"{prefix}_doc{n}_obs", label_visibility="collapsed", placeholder="—")
 
-    render_docs("cred_ltda", "Análise de Crédito — Empresas LTDA", "11", [
+    render_docs("cred_ltda", "09", "Análise de Crédito — Empresas LTDA", [
         "Documentos pessoais dos sócios e cônjuges (RG / CPF)",
         "Comprovante de endereço (sócios)",
         "Certidão de casamento dos sócios (se aplicável)",
@@ -522,9 +642,7 @@ with tabs[8]:
         "Imposto de Renda dos sócios — último exercício",
     ])
 
-    st.markdown("<div style='margin-top:8px'></div>", unsafe_allow_html=True)
-
-    render_docs("cred_coop", "Análise de Crédito — Cooperativas / S.A. / Usinas", "12", [
+    render_docs("cred_coop", "10", "Análise de Crédito — Cooperativas / S.A. / Usinas", [
         "Documentos pessoais dos dirigentes",
         "Comprovante de endereço dos dirigentes",
         "Certidão de casamento dos sócios (se aplicável)",
@@ -533,8 +651,7 @@ with tabs[8]:
         "Balanço Patrimonial e DRE — últimos 2 anos (assinados)",
     ])
 
-    st.markdown('<div class="sec-card" style="margin-top:20px"><div class="sec-label">Controle</div><div class="sec-title">Controle Interno</div></div>', unsafe_allow_html=True)
-
+    sec("Controle", "Controle Interno")
     ci1, ci2, ci3 = st.columns(3)
     with ci1:
         st.text_input("Cadastro realizado por", key="ctrl_cadastrado_por")
@@ -547,16 +664,17 @@ with tabs[8]:
             "", "Em preenchimento", "Completo", "Em revisão", "Aprovado",
         ], key="ctrl_status")
 
-# ═══════════════════════════════════════════════════════
-# GERAR FICHA (disparado pelo sidebar)
-# ═══════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════
+# GERAR FICHA
+# ══════════════════════════════════════════════════════════════════════════════
 if st.session_state.get("_gerar"):
     st.session_state["_gerar"] = False
-
     razao = st.session_state.get("razao_social", "").strip()
+
     if not razao:
         st.sidebar.error("Preencha a Razão Social antes de gerar.")
     else:
+        log_obs = st.session_state.get("log_acesso_obs", "")
         data = {
             "razao_social":               razao,
             "nome_fantasia":              st.session_state.get("nome_fantasia", ""),
@@ -607,8 +725,8 @@ if st.session_state.get("_gerar"):
             "log_antecedencia_nf":          st.session_state.get("log_antecedencia_nf", ""),
             "log_romaneio":                 st.session_state.get("log_romaneio", ""),
             "log_restricao_transportadora": st.session_state.get("log_restricao_transportadora", ""),
-            "log_regras_acesso":            st.session_state.get("log_regras_acesso", ""),
-            "log_observacoes":              st.session_state.get("log_observacoes", ""),
+            "log_regras_acesso":            log_obs,
+            "log_observacoes":              log_obs,
             **{k: fmt_date(v) if isinstance(v, (date, datetime)) else (v or "")
                for k, v in lic_data.items()},
             "estrat_concorrentes":     st.session_state.get("estrat_concorrentes", ""),
@@ -630,13 +748,12 @@ if st.session_state.get("_gerar"):
         }
         for n in range(1, 5):
             for campo in ("id", "municipio_estado", "obs"):
-                k = f"end_entrega_{n}_{campo}"
-                data[k] = st.session_state.get(k, "")
+                data[f"end_entrega_{n}_{campo}"] = st.session_state.get(
+                    f"end_entrega_{n}_{campo}", "")
 
         try:
-            st.session_state["arquivo_gerado"] = fill_template(data)
-            st.session_state["nome_arquivo"] = f"PRISMA_{razao.replace(' ', '_')}.xlsx"
-            st.sidebar.success("Pronto! Clique em Baixar Excel.")
+            st.session_state["arquivo_gerado"]  = fill_template(data)
+            st.session_state["_nome_arquivo"]   = f"PRISMA_{razao.replace(' ', '_')}.xlsx"
             st.rerun()
         except FileNotFoundError:
             st.sidebar.error("Template não encontrado.")
