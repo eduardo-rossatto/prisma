@@ -324,6 +324,17 @@ if "_click_tab" in st.session_state:
     }},120);
     </script>""", height=0)
 
+st.markdown("""
+<div style="padding:28px 0 20px">
+  <div style="font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:700;
+              color:#f8f8f7;letter-spacing:.08em;line-height:1">PRISMA</div>
+  <div style="font-size:.72rem;color:#5a5450;margin-top:6px;letter-spacing:.04em">
+    Partner · Relationship · Intelligence · Strategy · Mapping · Assessment
+    &nbsp;·&nbsp; Ficha Técnica de Clientes
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
 tabs = st.tabs(["Cadastro", "Endereços", "Contatos", "Perfil",
                 "Comercial", "Regras", "Licenças", "Estratégico", "Crédito"])
 
