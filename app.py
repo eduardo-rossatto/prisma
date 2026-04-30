@@ -1,5 +1,6 @@
 import streamlit as st
 import openpyxl
+import streamlit.components.v1 as components
 from io import BytesIO
 from datetime import date, datetime
 
@@ -313,6 +314,16 @@ with st.sidebar:
 # ══════════════════════════════════════════════════════════════════════════════
 # TABS
 # ══════════════════════════════════════════════════════════════════════════════
+# JS para trocar aba quando "Próximo" é clicado
+if "_click_tab" in st.session_state:
+    idx = st.session_state.pop("_click_tab")
+    components.html(f"""<script>
+    setTimeout(function(){{
+        var t=window.parent.document.querySelectorAll('[data-baseweb="tab"]');
+        if(t[{idx}])t[{idx}].click();
+    }},120);
+    </script>""", height=0)
+
 tabs = st.tabs(["Cadastro", "Endereços", "Contatos", "Perfil",
                 "Comercial", "Regras", "Licenças", "Estratégico", "Crédito"])
 
@@ -348,6 +359,12 @@ with tabs[0]:
     with rb1: st.text_input("Nome completo", key="ctrl_responsavel_biotrop")
     with rb2: st.text_input("E-mail", key="ctrl_responsavel_biotrop_email")
     with rb3: st.text_input("Telefone", key="ctrl_responsavel_biotrop_tel")
+
+    _s, _b = st.columns([6, 2])
+    with _b:
+        if st.button("Próximo: Endereços →", key="_prox_0", use_container_width=True):
+            st.session_state["_click_tab"] = 1
+            st.rerun()
 
 # ─────────────────────────────────────────────
 # 02 · ENDEREÇOS
@@ -392,6 +409,12 @@ with tabs[1]:
                 "", key=f"end_entrega_{n}_obs", label_visibility="collapsed",
                 placeholder="—")
 
+    _s, _b = st.columns([6, 2])
+    with _b:
+        if st.button("Próximo: Contatos →", key="_prox_1", use_container_width=True):
+            st.session_state["_click_tab"] = 2
+            st.rerun()
+
 # ─────────────────────────────────────────────
 # 03 · CONTATOS
 # ─────────────────────────────────────────────
@@ -426,6 +449,12 @@ with tabs[2]:
             with ic5:
                 contatos[f"{prefix}{idx}_email"] = st.text_input("", key=f"{prefix}{idx}_email", label_visibility="collapsed", placeholder="—")
 
+    _s, _b = st.columns([6, 2])
+    with _b:
+        if st.button("Próximo: Perfil →", key="_prox_2", use_container_width=True):
+            st.session_state["_click_tab"] = 3
+            st.rerun()
+
 # ─────────────────────────────────────────────
 # 04 · PERFIL
 # ─────────────────────────────────────────────
@@ -446,6 +475,12 @@ with tabs[3]:
     with p3:
         st.text_area("Produtos Biotrop que já compra", height=112, key="produtos_utilizados",
                      placeholder="Liste os produtos já utilizados pelo cliente…")
+
+    _s, _b = st.columns([6, 2])
+    with _b:
+        if st.button("Próximo: Comercial →", key="_prox_3", use_container_width=True):
+            st.session_state["_click_tab"] = 4
+            st.rerun()
 
 # ─────────────────────────────────────────────
 # 05 · COMERCIAL
@@ -468,6 +503,12 @@ with tabs[4]:
 
     st.text_area("Condições Comerciais Especiais", height=72,
                  key="condicoes_especiais", placeholder="—")
+
+    _s, _b = st.columns([6, 2])
+    with _b:
+        if st.button("Próximo: Regras →", key="_prox_4", use_container_width=True):
+            st.session_state["_click_tab"] = 5
+            st.rerun()
 
 # ─────────────────────────────────────────────
 # 06 · REGRAS
@@ -508,6 +549,12 @@ with tabs[5]:
     with l12: st.text_area("Regras de acesso / EPI / Observações", height=72,
                             key="log_acesso_obs", placeholder="—")
 
+    _s, _b = st.columns([6, 2])
+    with _b:
+        if st.button("Próximo: Licenças →", key="_prox_5", use_container_width=True):
+            st.session_state["_click_tab"] = 6
+            st.rerun()
+
 # ─────────────────────────────────────────────
 # 07 · LICENÇAS
 # ─────────────────────────────────────────────
@@ -541,6 +588,12 @@ with tabs[6]:
         with c4:
             lic_data[f"{prefix}_obs"]      = st.text_input(
                 "", key=f"{prefix}_obs", label_visibility="collapsed", placeholder="—")
+
+    _s, _b = st.columns([6, 2])
+    with _b:
+        if st.button("Próximo: Estratégico →", key="_prox_6", use_container_width=True):
+            st.session_state["_click_tab"] = 7
+            st.rerun()
 
 # ─────────────────────────────────────────────
 # 08 · ESTRATÉGICO
@@ -589,6 +642,12 @@ with tabs[7]:
         with cr3:
             compl_data[f"{prefix}_obs"]   = st.text_input(
                 "", key=f"{prefix}_obs", label_visibility="collapsed", placeholder="—")
+
+    _s, _b = st.columns([6, 2])
+    with _b:
+        if st.button("Próximo: Crédito →", key="_prox_7", use_container_width=True):
+            st.session_state["_click_tab"] = 8
+            st.rerun()
 
 # ─────────────────────────────────────────────
 # 09 · CRÉDITO + CONTROLE
@@ -646,24 +705,12 @@ with tabs[8]:
             "", "Em preenchimento", "Completo", "Em revisão", "Aprovado",
         ], key="ctrl_status")
 
-# ══════════════════════════════════════════════════════════════════════════════
-# CTA — Gerar Ficha
-# ══════════════════════════════════════════════════════════════════════════════
-st.markdown("""
-<div style="margin-top:48px;border-top:1px solid rgba(255,255,255,0.06);
-            padding-top:40px;text-align:center">
-  <div style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:600;
-              color:#f8f8f7;margin-bottom:6px">Pronto para gerar a ficha?</div>
-  <div style="font-size:.78rem;color:#766f6b;margin-bottom:28px">
-    Preencha as seções acima e clique no botão para gerar o Excel.
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-col_l, col_btn, col_r = st.columns([2, 3, 2])
-with col_btn:
-    if st.button("Gerar Ficha", type="primary", use_container_width=True):
-        st.session_state["_gerar"] = True
+    st.markdown("<div style='margin-top:32px;border-top:1px solid rgba(255,255,255,0.06);padding-top:28px'></div>",
+                unsafe_allow_html=True)
+    _s, _b = st.columns([6, 2])
+    with _b:
+        if st.button("Gerar Ficha", key="_gerar_btn", type="primary", use_container_width=True):
+            st.session_state["_gerar"] = True
 
 if "arquivo_gerado" in st.session_state:
     st.markdown("""
