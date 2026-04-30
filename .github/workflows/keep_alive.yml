@@ -1,0 +1,15 @@
+name: Keep Alive
+
+on:
+  schedule:
+    - cron: "0 */3 * * *"   # a cada 3 horas
+  workflow_dispatch:         # permite rodar manualmente se precisar
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping PRISMA app
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.PRISMA_APP_URL }}")
+          echo "HTTP status: $STATUS"
