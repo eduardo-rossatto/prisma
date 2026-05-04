@@ -45,6 +45,14 @@ DOCS_COOP = [
     "Balanço Patrimonial e DRE — últimos 2 anos (assinados)",
 ]
 
+DOCS_PF = [
+    "Documentos pessoais do cliente e cônjuge",
+    "Comprovante de endereço atualizado",
+    "Certidão de casamento dos sócios (se aplicável)",
+    "Declaração de Imposto de Renda do cliente e cônjuge do último ano",
+    "Em caso de arrendatários, contrato de arrendamento vigente",
+]
+
 # ══════════════════════════════════════════════════════════════════════════════
 # CSS
 # ══════════════════════════════════════════════════════════════════════════════
@@ -603,8 +611,20 @@ with tabs[7]:
                     "",key=f"{prefix}_doc{n}_obs",
                     label_visibility="collapsed",placeholder="—")
 
-    render_docs("cred_ltda","08a","Análise de Crédito — Empresas LTDA", DOCS_LTDA)
-    render_docs("cred_coop","08b","Análise de Crédito — Cooperativas / S.A. / Usinas", DOCS_COOP)
+    sec("Tipo de Cliente","Tipo de Cliente","Selecione o perfil jurídico para exibir os documentos de crédito correspondentes.")
+    tipo_cliente_cred = st.selectbox(
+        "Perfil jurídico do cliente",
+        ["LTDA", "S.A. / Cooperativa / Usina", "Pessoa Física"],
+        key="tipo_cliente_cred",
+        label_visibility="collapsed",
+    )
+
+    if tipo_cliente_cred == "LTDA":
+        render_docs("cred_ltda","08a","Análise de Crédito — Empresas LTDA", DOCS_LTDA)
+    elif tipo_cliente_cred == "S.A. / Cooperativa / Usina":
+        render_docs("cred_coop","08b","Análise de Crédito — Cooperativas / S.A. / Usinas", DOCS_COOP)
+    else:
+        render_docs("cred_pf","08c","Análise de Crédito — Pessoa Física", DOCS_PF)
 
     sec("Controle","Controle Interno")
     ci1,ci2,ci3,ci4 = st.columns(4)
@@ -820,7 +840,7 @@ if st.session_state.get("_gerar"):
                     text_data[f"ATLAS-do-prod-{i}"] = ""    # → "-"
 
         # Documentos de crédito
-        for prefix, docs in [("cred_ltda",DOCS_LTDA),("cred_coop",DOCS_COOP)]:
+        for prefix, docs in [("cred_ltda",DOCS_LTDA),("cred_coop",DOCS_COOP),("cred_pf",DOCS_PF)]:
             for n, nome_doc in enumerate(docs, start=1):
                 fobj = st.session_state.get(f"{prefix}_doc{n}_file")
                 if fobj:
