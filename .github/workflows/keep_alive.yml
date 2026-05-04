@@ -1,21 +1,113 @@
-name: Keep Alive
+name: Keep Alive — PRISMA
 
 on:
   schedule:
-    - cron: "0 */3 * * *"   # a cada 3 horas
+    - cron: '0 */3 * * *'   # a cada 3h: 00, 03, 06, 09, 12, 15, 18, 21 UTC
   workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping PRISMA app
+      - uses: actions/checkout@v4
+
+      - name: Keepalive — evita GitHub desativar workflows
         run: |
-          URL="${{ vars.PRISMA_APP_URL }}"
-          if [ -z "$URL" ]; then
-            echo "PRISMA_APP_URL não configurada — configure em Settings > Variables > Actions"
-            exit 0
-          fi
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$URL" || echo "000")
-          echo "HTTP status: $STATUS"
-          echo "App pingado: $URL"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git commit --allow-empty -m "chore: keepalive [skip ci]"
+          git push
+        continue-on-error: true
+
+      - name: Cache Playwright Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}
+
+      - name: Instalar Playwright
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
+
+      - name: Acordar PRISMA
+        run: |
+          python - <<'EOF'
+          from playwright.sync_api import sync_playwright
+          import sys
+
+          url = "https://prisma2b2.streamlit.app/"
+
+          with sync_playwright() as p:
+              browser = p.chromium.launch(
+                  args=["--no-sandbox", "--disable-dev-shm-usage"]
+              )
+              context = browser.new_context(
+                  viewport={"width": 1280, "height": 800},
+                  user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+              )
+              page = context.new_page()
+
+              print(f"Abrindo {url}...")
+              try:
+                  page.goto(url, wait_until="domcontentloaded", timeout=60000)
+              except Exception as e:
+                  print(f"AVISO goto: {e}")
+
+              page.wait_for_timeout(6000)
+
+              # Log do conteúdo visível para diagnóstico
+              try:
+                  body_text = page.locator("body").inner_text(timeout=5000)
+                  print(f"--- Conteúdo da página (primeiros 500 chars) ---")
+                  print(body_text[:500])
+                  print("--- fim ---")
+              except Exception as e:
+                  print(f"Não foi possível ler body: {e}")
+
+              woke = False
+              wake_texts = [
+                  "Yes, get this app back up!",
+                  "Yes, get it back up",
+                  "Wake up",
+                  "Get this app back up",
+                  "Rerun",
+                  "Yes",
+              ]
+              for text in wake_texts:
+                  try:
+                      el = page.get_by_text(text, exact=False)
+                      count = el.count()
+                      print(f"Buscando botão '{text}': {count} elemento(s) encontrado(s)")
+                      if count > 0 and el.first.is_visible():
+                          print(f"App dormindo — clicando '{text}'...")
+                          el.first.click()
+                          woke = True
+                          break
+                  except Exception as e:
+                      print(f"Erro ao buscar '{text}': {e}")
+
+              if woke:
+                  print("Aguardando app iniciar (até 3 min)...")
+                  try:
+                      page.wait_for_selector('[data-testid="stApp"]', timeout=180000)
+                      print("App iniciado com sucesso.")
+                  except Exception as e:
+                      print(f"Timeout aguardando stApp: {e}")
+                  page.wait_for_timeout(10000)
+              else:
+                  print("Nenhum botão de wake encontrado — verificando se app já está ativo...")
+                  try:
+                      page.wait_for_selector('[data-testid="stApp"]', timeout=30000)
+                      print("App confirmado como ativo (stApp presente).")
+                  except Exception:
+                      print("ALERTA: stApp não detectado e nenhum botão de wake encontrado.")
+                  page.wait_for_timeout(15000)
+
+              print("OK — sessão concluída.")
+              browser.close()
+          EOF
