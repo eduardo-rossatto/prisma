@@ -13,6 +13,17 @@ st.set_page_config(
 
 TEMPLATE_PATH = "template/Prisma - Template.xlsx"
 
+GESTORES = {
+    "Amanda Cristine Gonçalves": {
+        "email": "amanda.goncalves@biotrop.com.br",
+        "tel": "(41) 3099-7300 | (19) 3886-4140 | (41) 99143-1823",
+    },
+    "Tatiane Carvalho": {
+        "email": "tatiane.carvalho@biotrop.com.br",
+        "tel": "(41) 3099-7300 | (19) 3886-4140 | (41) 99293-7173",
+    },
+}
+
 # ══════════════════════════════════════════════════════════════════════════════
 # CSS — Groq-inspired dark theme
 # ══════════════════════════════════════════════════════════════════════════════
@@ -233,7 +244,6 @@ def fill_template(data: dict) -> bytes:
     return buf.getvalue()
 
 def sec(num_or_label, title, desc=""):
-    """Section header — Groq style."""
     st.markdown(f"""
     <div style="margin:4px 0 28px">
       <div style="font-size:.6rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
@@ -271,6 +281,19 @@ def s_doc(label, key, lv="visible"):
 def s_lic(label, key, lv="visible"):
     return st.selectbox(label, ["", "Válida", "Vencida", "Pendente", "Não se aplica"], key=key, label_visibility=lv)
 
+def autofill_box(label, value):
+    lbl_s = "color:#766f6b;font-size:.68rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase"
+    val_s = "color:#f8f8f7;font-size:.86rem" if value else "color:#3a3430;font-size:.86rem"
+    st.markdown(
+        f"<div style='margin-bottom:16px'>"
+        f"<div style='{lbl_s};margin-bottom:4px'>{label}</div>"
+        f"<div style='background:#1e1d1b;border:1px solid rgba(255,255,255,.06);border-radius:8px;"
+        f"padding:9px 12px;min-height:38px'>"
+        f"<span style='{val_s}'>{value or '—'}</span>"
+        f"</div></div>",
+        unsafe_allow_html=True,
+    )
+
 # ══════════════════════════════════════════════════════════════════════════════
 # SIDEBAR
 # ══════════════════════════════════════════════════════════════════════════════
@@ -290,12 +313,12 @@ with st.sidebar:
         ("01", "Cadastro"),
         ("02", "Endereços"),
         ("03", "Contatos"),
-        ("04", "Perfil"),
-        ("05", "Comercial"),
-        ("06", "Regras"),
-        ("07", "Licenças"),
-        ("08", "Estratégico"),
-        ("09", "Crédito"),
+        ("04", "Comercial"),
+        ("05", "Regras"),
+        ("06", "Licenças"),
+        ("07", "Estratégico"),
+        ("08", "Crédito"),
+        ("09", "Produtos"),
     ]
     for num, label in nav:
         st.markdown(f"""
@@ -314,7 +337,6 @@ with st.sidebar:
 # ══════════════════════════════════════════════════════════════════════════════
 # TABS
 # ══════════════════════════════════════════════════════════════════════════════
-# JS para trocar aba quando "Próximo" é clicado
 if "_click_tab" in st.session_state:
     idx = st.session_state.pop("_click_tab")
     components.html(f"""<script>
@@ -335,8 +357,8 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-tabs = st.tabs(["Cadastro", "Endereços", "Contatos", "Perfil",
-                "Comercial", "Regras", "Licenças", "Estratégico", "Crédito"])
+tabs = st.tabs(["Cadastro", "Endereços", "Contatos", "Comercial",
+                "Regras", "Licenças", "Estratégico", "Crédito", "Produtos"])
 
 # ─────────────────────────────────────────────
 # 01 · CADASTRO
@@ -356,20 +378,24 @@ with tabs[0]:
         st.text_input("Inscrição Estadual", key="inscricao_estadual")
         st.text_input("Inscrição Municipal", key="inscricao_municipal")
 
-    c4, c5, c6 = st.columns([2, 2, 2])
+    c4, c5 = st.columns([2, 6])
     with c4:
         st.date_input("Data de Abertura", value=None, key="data_abertura", format="DD/MM/YYYY")
-    with c5:
-        st.text_input("Grupo Econômico", key="grupo_economico")
-    with c6:
-        st.date_input("Cliente Desde", value=None, key="data_inicio_relacionamento", format="DD/MM/YYYY")
 
-    sub("Responsável Biotrop")
+    sub("Responsável pela Gestão de Carteira")
 
-    rb1, rb2, rb3 = st.columns(3)
-    with rb1: st.text_input("Nome completo", key="ctrl_responsavel_biotrop")
-    with rb2: st.text_input("E-mail", key="ctrl_responsavel_biotrop_email")
-    with rb3: st.text_input("Telefone", key="ctrl_responsavel_biotrop_tel")
+    gestor = st.selectbox(
+        "Nome completo",
+        [""] + list(GESTORES.keys()),
+        key="gestor_carteira",
+    )
+    g_info = GESTORES.get(gestor, {})
+
+    rb2, rb3 = st.columns(2)
+    with rb2:
+        autofill_box("E-mail", g_info.get("email", ""))
+    with rb3:
+        autofill_box("Telefone", g_info.get("tel", ""))
 
     _s, _b = st.columns([6, 2])
     with _b:
@@ -397,7 +423,6 @@ with tabs[1]:
     with e7: st.text_input("CEP", placeholder="00000-000", key="end_fiscal_cep")
 
     sub("Endereços de Entrega")
-    entregas = {}
     h1, h2, h3, h4 = st.columns([1, 2, 3, 4])
     col_head("Opção", "Identificação", "Município / Estado", "Observações",
              cols=[h1, h2, h3, h4])
@@ -408,17 +433,14 @@ with tabs[1]:
             st.markdown(f"<div style='padding-top:10px;font-family:IBM Plex Mono,monospace;"
                         f"font-size:.75rem;color:#5a5450'>0{n}</div>", unsafe_allow_html=True)
         with ec2:
-            entregas[f"end_entrega_{n}_id"] = st.text_input(
-                "", key=f"end_entrega_{n}_id", label_visibility="collapsed",
-                placeholder="Nome da unidade")
+            st.text_input("", key=f"end_entrega_{n}_id", label_visibility="collapsed",
+                          placeholder="Nome da unidade")
         with ec3:
-            entregas[f"end_entrega_{n}_municipio_estado"] = st.text_input(
-                "", key=f"end_entrega_{n}_municipio_estado", label_visibility="collapsed",
-                placeholder="Cidade / UF")
+            st.text_input("", key=f"end_entrega_{n}_municipio_estado", label_visibility="collapsed",
+                          placeholder="Cidade / UF")
         with ec4:
-            entregas[f"end_entrega_{n}_obs"] = st.text_input(
-                "", key=f"end_entrega_{n}_obs", label_visibility="collapsed",
-                placeholder="—")
+            st.text_input("", key=f"end_entrega_{n}_obs", label_visibility="collapsed",
+                          placeholder="—")
 
     _s, _b = st.columns([6, 2])
     with _b:
@@ -431,14 +453,13 @@ with tabs[1]:
 # ─────────────────────────────────────────────
 with tabs[2]:
     sec("Bloco 03", "Contatos",
-        "Dois contatos por área: comercial, financeiro, técnico e logística.")
+        "Dois contatos por área: financeiro, técnico e logística.")
 
     contatos = {}
     grupos = [
-        ("Comercial",             "com"),
-        ("Financeiro",            "fin"),
-        ("Responsável Técnico",   "tec"),
-        ("Logística",             "log"),
+        ("Financeiro",          "fin"),
+        ("Responsável Técnico", "tec"),
+        ("Logística",           "log"),
     ]
     for g_label, prefix in grupos:
         sub(g_label)
@@ -462,115 +483,97 @@ with tabs[2]:
 
     _s, _b = st.columns([6, 2])
     with _b:
-        if st.button("Próximo: Perfil →", key="_prox_2", use_container_width=True):
+        if st.button("Próximo: Comercial →", key="_prox_2", use_container_width=True):
             st.session_state["_click_tab"] = 3
             st.rerun()
 
 # ─────────────────────────────────────────────
-# 04 · PERFIL
+# 04 · COMERCIAL
 # ─────────────────────────────────────────────
 with tabs[3]:
-    sec("Bloco 04", "Perfil do Cliente",
-        "Caracterização do negócio e relação com os produtos Biotrop.")
+    sec("Bloco 04", "Condições Comerciais e Financeiras",
+        "Pagamento e política de bonificação.")
 
-    p1, p2, p3 = st.columns([2, 2, 3])
-    with p1:
-        st.selectbox("Tipo de cliente", [
-            "", "Distribuidor", "Revendedor", "Cooperativa",
-            "Produtor Rural", "Importador", "Outro",
-        ], key="tipo_cliente")
-        st.text_input("Área Total (ha)", key="area_total_ha")
-    with p2:
-        st.text_input("Culturas Principais", key="culturas_principais")
-        st.text_input("Região de Atuação", key="regiao_atuacao")
-    with p3:
-        st.text_area("Produtos Biotrop que já compra", height=112, key="produtos_utilizados",
-                     placeholder="Liste os produtos já utilizados pelo cliente…")
-
-    _s, _b = st.columns([6, 2])
-    with _b:
-        if st.button("Próximo: Comercial →", key="_prox_3", use_container_width=True):
-            st.session_state["_click_tab"] = 4
-            st.rerun()
-
-# ─────────────────────────────────────────────
-# 05 · COMERCIAL
-# ─────────────────────────────────────────────
-with tabs[4]:
-    sec("Bloco 05", "Condições Comerciais e Financeiras",
-        "Pagamento, crédito e política de bonificação.")
-
-    c1, c2, c3 = st.columns(3)
+    c1, c2 = st.columns(2)
     with c1:
         st.text_input("Condição de Pagamento", placeholder="ex: 30/60/90 DDL", key="condicao_pagamento")
-        st.text_input("Prazo Médio (dias)", key="prazo_medio_dias")
     with c2:
-        st.text_input("Limite de Crédito (R$)", key="limite_credito")
-        st.selectbox("Forma de Pagamento", [
-            "", "Boleto", "PIX", "Transferência Bancária", "Cheque", "Cartão", "Misto",
-        ], key="forma_pagamento")
-    with c3:
-        st.text_area("Política de Bonificação", height=112, key="politica_bonificacao")
+        sim_nao("Política de Bonificação", "politica_bonificacao")
 
     st.text_area("Condições Comerciais Especiais", height=72,
                  key="condicoes_especiais", placeholder="—")
 
     _s, _b = st.columns([6, 2])
     with _b:
-        if st.button("Próximo: Regras →", key="_prox_4", use_container_width=True):
+        if st.button("Próximo: Regras →", key="_prox_3", use_container_width=True):
+            st.session_state["_click_tab"] = 4
+            st.rerun()
+
+# ─────────────────────────────────────────────
+# 05 · REGRAS
+# ─────────────────────────────────────────────
+with tabs[4]:
+    sec("Bloco 05", "Regras de Faturamento e Logística",
+        "Requisitos operacionais para emissão de nota e entrega.")
+
+    sub("Faturamento")
+    f1, f2, f3 = st.columns([3, 1, 3])
+    with f1:
+        st.selectbox("Data limite para faturamento", [
+            "", "Até o último dia útil", "Sem restrição", "Até o dia 25", "Personalizado",
+        ], key="fat_data_opcao")
+        if st.session_state.get("fat_data_opcao") == "Personalizado":
+            st.text_input("Especifique:", key="fat_data_custom", placeholder="ex: dia 20")
+    with f2:
+        sim_nao("Exige PO?", "fat_exige_po")
+    with f3:
+        st.text_input("Prazo de Envio para NF", placeholder="ex: 48h antes", key="fat_prazo_nf")
+
+    st.text_area("Observações de Faturamento", height=72, key="fat_observacoes", placeholder="—")
+
+    sub("Logística")
+    l1, l2, l3 = st.columns([2, 1, 2])
+    with l1:
+        st.selectbox("Tipo de entrega", ["", "CIF", "FOB"], key="log_tipo_entrega")
+    with l2:
+        sim_nao("Agendamento?", "log_agendamento")
+    with l3:
+        st.text_input("Prazo mínimo agendamento", placeholder="ex: 48h", key="log_prazo_agendamento")
+
+    l4, l5 = st.columns(2)
+    with l4:
+        st.selectbox("Dias de recebimento", [
+            "", "Todos os dias", "Todos os dias úteis", "Personalizado",
+        ], key="log_dias_opcao")
+        if st.session_state.get("log_dias_opcao") == "Personalizado":
+            st.multiselect(
+                "Selecione os dias:",
+                ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"],
+                key="log_dias_sel",
+            )
+    with l5:
+        st.selectbox("Horário de recebimento", [
+            "", "Horário comercial", "Personalizado",
+        ], key="log_horario_opcao")
+        if st.session_state.get("log_horario_opcao") == "Personalizado":
+            h1, h2 = st.columns(2)
+            with h1: st.text_input("De:", key="log_horario_de", placeholder="07:00")
+            with h2: st.text_input("Até:", key="log_horario_ate", placeholder="17:00")
+
+    st.text_area("Regras de acesso / EPI / Observações", height=72,
+                 key="log_acesso_obs", placeholder="—")
+
+    _s, _b = st.columns([6, 2])
+    with _b:
+        if st.button("Próximo: Licenças →", key="_prox_4", use_container_width=True):
             st.session_state["_click_tab"] = 5
             st.rerun()
 
 # ─────────────────────────────────────────────
-# 06 · REGRAS
+# 06 · LICENÇAS
 # ─────────────────────────────────────────────
 with tabs[5]:
-    sec("Bloco 06", "Regras de Faturamento e Logística",
-        "Requisitos operacionais para emissão de nota e entrega.")
-
-    sub("Faturamento")
-    f1, f2, f3, f4 = st.columns([2, 1, 1, 1])
-    with f1: st.text_input("Data limite para faturamento", placeholder="ex: dia 20", key="fat_data_limite")
-    with f2: sim_nao("Exige PO?",             "fat_exige_po")
-    with f3: sim_nao("Exige Contrato?",        "fat_exige_contrato")
-    with f4: sim_nao("Conferência de NF?",     "fat_conferencia_nf")
-
-    f5, f6, f7 = st.columns([2, 2, 3])
-    with f5: st.text_input("Prazo de Envio para NF", placeholder="ex: 48h antes", key="fat_prazo_nf")
-    with f6: st.text_input("Shelf life mínimo", placeholder="ex: 12 meses", key="fat_shelf_life")
-    with f7: st.text_area("Observações de Faturamento", height=72, key="fat_observacoes", placeholder="—")
-
-    sub("Logística")
-    l1, l2, l3, l4, l5 = st.columns([2, 1, 2, 1, 2])
-    with l1: st.selectbox("Tipo de entrega", ["", "CIF", "FOB", "CIF e FOB"], key="log_tipo_entrega")
-    with l2: sim_nao("Agendamento?",           "log_agendamento")
-    with l3: st.text_input("Prazo mínimo agendamento", placeholder="ex: 48h", key="log_prazo_agendamento")
-    with l4: sim_nao("Aviso?",                 "log_aviso_entrega")
-    with l5: st.text_input("Antecedência aviso (h)", key="log_antecedencia_aviso")
-
-    l6, l7, l8, l9 = st.columns([2, 2, 1, 1])
-    with l6: st.text_input("Dias de recebimento", placeholder="ex: Seg a Sex", key="log_dias_recebimento")
-    with l7: st.text_input("Horário de recebimento", placeholder="ex: 07h–17h", key="log_horario_recebimento")
-    with l8: sim_nao("NF antecipada?",         "log_nf_antecipada")
-    with l9: st.text_input("Antecedência NF (h)", key="log_antecedencia_nf")
-
-    l10, l11, l12 = st.columns([1, 2, 4])
-    with l10: sim_nao("Romaneio?",             "log_romaneio")
-    with l11: st.text_input("Restrição transportadora", key="log_restricao_transportadora")
-    with l12: st.text_area("Regras de acesso / EPI / Observações", height=72,
-                            key="log_acesso_obs", placeholder="—")
-
-    _s, _b = st.columns([6, 2])
-    with _b:
-        if st.button("Próximo: Licenças →", key="_prox_5", use_container_width=True):
-            st.session_state["_click_tab"] = 6
-            st.rerun()
-
-# ─────────────────────────────────────────────
-# 07 · LICENÇAS
-# ─────────────────────────────────────────────
-with tabs[6]:
-    sec("Bloco 07", "Licenças e Documentação",
+    sec("Bloco 06", "Licenças e Documentação do Cliente",
         "Status de validade das licenças regulatórias do cliente.")
 
     lic_data = {}
@@ -602,45 +605,26 @@ with tabs[6]:
 
     _s, _b = st.columns([6, 2])
     with _b:
-        if st.button("Próximo: Estratégico →", key="_prox_6", use_container_width=True):
-            st.session_state["_click_tab"] = 7
+        if st.button("Próximo: Estratégico →", key="_prox_5", use_container_width=True):
+            st.session_state["_click_tab"] = 6
             st.rerun()
 
 # ─────────────────────────────────────────────
-# 08 · ESTRATÉGICO
+# 07 · ESTRATÉGICO
 # ─────────────────────────────────────────────
-with tabs[7]:
-    sec("Bloco 08", "Informações Estratégicas e Complexidade",
-        "Inteligência competitiva e avaliação operacional do cliente.")
-
-    sub("Informações Estratégicas")
-    es1, es2, es3 = st.columns(3)
-    with es1:
-        st.text_area("Concorrentes utilizados", height=100, key="estrat_concorrentes", placeholder="—")
-        st.text_input("Potencial de volume estimado", placeholder="ex: 500 t/ano", key="estrat_potencial_volume")
-    with es2:
-        st.text_area("Histórico de relacionamentos", height=100, key="estrat_historico", placeholder="—")
-        st.text_input("Participação estimada (%)", placeholder="ex: 30%", key="estrat_participacao")
-    with es3:
-        st.selectbox("Classificação de risco", ["", "Baixo", "Médio", "Alto"], key="estrat_risco")
-        st.text_area("Observações estratégicas", height=100, key="estrat_observacoes", placeholder="—")
-
-    sub("Complexidade Operacional")
-    co1, co2 = st.columns([2, 5])
-    with co1:
-        st.selectbox("Classificação Geral", ["", "Baixa", "Média", "Alta"], key="compl_classificacao")
-    with co2:
-        st.text_area("Justificativa", height=72, key="compl_justificativa", placeholder="—")
+with tabs[6]:
+    sec("Bloco 07", "Complexidade Operacional",
+        "Avaliação dos critérios operacionais do cliente.")
 
     hd = st.columns([4, 1, 4])
     col_head("Critério", "Nível (1–3)", "Observação", cols=hd)
 
     compl_data = {}
     criterios = [
-        ("Exigências logísticas",          "compl_log"),
-        ("Burocracia de faturamento",       "compl_fat"),
-        ("Dificuldade de acesso",           "compl_acesso"),
-        ("Nível de exigência operacional",  "compl_operacional"),
+        ("Exigências logísticas",         "compl_log"),
+        ("Burocracia de faturamento",      "compl_fat"),
+        ("Dificuldade de acesso",          "compl_acesso"),
+        ("Nível de exigência operacional", "compl_operacional"),
     ]
     for nome_crit, prefix in criterios:
         cr1, cr2, cr3 = st.columns([4, 1, 4])
@@ -656,14 +640,14 @@ with tabs[7]:
 
     _s, _b = st.columns([6, 2])
     with _b:
-        if st.button("Próximo: Crédito →", key="_prox_7", use_container_width=True):
-            st.session_state["_click_tab"] = 8
+        if st.button("Próximo: Crédito →", key="_prox_6", use_container_width=True):
+            st.session_state["_click_tab"] = 7
             st.rerun()
 
 # ─────────────────────────────────────────────
-# 09 · CRÉDITO + CONTROLE
+# 08 · CRÉDITO + CONTROLE
 # ─────────────────────────────────────────────
-with tabs[8]:
+with tabs[7]:
     cred_data = {}
 
     def render_docs(prefix, bloco, titulo, docs):
@@ -685,7 +669,7 @@ with tabs[8]:
                 cred_data[f"{prefix}_doc{n}_obs"]    = st.text_input(
                     "", key=f"{prefix}_doc{n}_obs", label_visibility="collapsed", placeholder="—")
 
-    render_docs("cred_ltda", "09", "Análise de Crédito — Empresas LTDA", [
+    render_docs("cred_ltda", "08a", "Análise de Crédito — Empresas LTDA", [
         "Documentos pessoais dos sócios e cônjuges (RG / CPF)",
         "Comprovante de endereço (sócios)",
         "Certidão de casamento dos sócios (se aplicável)",
@@ -694,7 +678,7 @@ with tabs[8]:
         "Imposto de Renda dos sócios — último exercício",
     ])
 
-    render_docs("cred_coop", "10", "Análise de Crédito — Cooperativas / S.A. / Usinas", [
+    render_docs("cred_coop", "08b", "Análise de Crédito — Cooperativas / S.A. / Usinas", [
         "Documentos pessoais dos dirigentes",
         "Comprovante de endereço dos dirigentes",
         "Certidão de casamento dos sócios (se aplicável)",
@@ -704,7 +688,7 @@ with tabs[8]:
     ])
 
     sec("Controle", "Controle Interno")
-    ci1, ci2, ci3 = st.columns(3)
+    ci1, ci2, ci3, ci4 = st.columns(4)
     with ci1:
         st.text_input("Cadastro realizado por", key="ctrl_cadastrado_por")
         st.date_input("Data do cadastro", value=date.today(), key="ctrl_data_cadastro", format="DD/MM/YYYY")
@@ -712,9 +696,52 @@ with tabs[8]:
         st.text_input("Responsável pela atualização", key="ctrl_responsavel_atualizacao")
         st.date_input("Última atualização", value=date.today(), key="ctrl_ultima_atualizacao", format="DD/MM/YYYY")
     with ci3:
+        st.text_input("Revisado por", key="ctrl_revisadopor")
+    with ci4:
+        st.text_input("Aprovado por", key="ctrl_aprovadopor")
         st.selectbox("Status do cadastro", [
             "", "Em preenchimento", "Completo", "Em revisão", "Aprovado",
         ], key="ctrl_status")
+
+    _s, _b = st.columns([6, 2])
+    with _b:
+        if st.button("Próximo: Produtos →", key="_prox_7", use_container_width=True):
+            st.session_state["_click_tab"] = 8
+            st.rerun()
+
+# ─────────────────────────────────────────────
+# 09 · PRODUTOS DO CLIENTE
+# ─────────────────────────────────────────────
+with tabs[8]:
+    sec("Bloco 09", "Produtos do Cliente",
+        "Relação de produtos, fichas técnicas ATLAS e shelf-life mínimo.")
+
+    num_prod = st.number_input(
+        "Quantidade de produtos (Máximo 14)",
+        min_value=0, max_value=14, step=1, value=0,
+        key="num_produtos",
+    )
+
+    if int(num_prod) > 0:
+        st.markdown("<div style='margin-top:8px'></div>", unsafe_allow_html=True)
+        hp0, hp1, hp2, hp3 = st.columns([0.4, 3, 3, 3])
+        col_head("", "Nome / Cód. do Produto", "Ficha Técnica ATLAS", "Shelf-life mínimo para entrega",
+                 cols=[hp0, hp1, hp2, hp3])
+
+        for i in range(1, int(num_prod) + 1):
+            pc0, pc1, pc2, pc3 = st.columns([0.4, 3, 3, 3])
+            with pc0:
+                st.markdown(
+                    f"<div style='padding-top:10px;font-family:IBM Plex Mono,monospace;"
+                    f"font-size:.75rem;color:#5a5450'>{i:02d}</div>",
+                    unsafe_allow_html=True,
+                )
+            with pc1:
+                st.text_input("", key=f"produtos_do_c_{i}", label_visibility="collapsed", placeholder="—")
+            with pc2:
+                st.text_input("", key=f"ATLAS-do-prod-{i}", label_visibility="collapsed", placeholder="—")
+            with pc3:
+                st.text_input("", key=f"SFMINdoprod_{i}", label_visibility="collapsed", placeholder="—")
 
     st.markdown("<div style='margin-top:32px;border-top:1px solid rgba(255,255,255,0.06);padding-top:28px'></div>",
                 unsafe_allow_html=True)
@@ -754,8 +781,39 @@ if st.session_state.get("_gerar"):
     if not razao:
         st.error("Preencha a Razão Social (aba Cadastro) antes de gerar a ficha.")
     else:
+        # ── Gestor auto-fill ──
+        gestor_name = st.session_state.get("gestor_carteira", "")
+        gestor_info = GESTORES.get(gestor_name, {})
+
+        # ── Faturamento: data limite ──
+        fat_opcao  = st.session_state.get("fat_data_opcao", "")
+        fat_custom = st.session_state.get("fat_data_custom", "")
+        fat_data_limite = fat_custom if fat_opcao == "Personalizado" else fat_opcao
+
+        # ── Logística: dias de recebimento ──
+        dias_op  = st.session_state.get("log_dias_opcao", "")
+        dias_sel = st.session_state.get("log_dias_sel", [])
+        log_dias = ", ".join(dias_sel) if (dias_op == "Personalizado" and dias_sel) else dias_op
+
+        # ── Logística: horário de recebimento ──
+        hora_op  = st.session_state.get("log_horario_opcao", "")
+        hora_de  = st.session_state.get("log_horario_de", "")
+        hora_ate = st.session_state.get("log_horario_ate", "")
+        log_horario = (f"De {hora_de} às {hora_ate}" if (hora_de or hora_ate)
+                       else hora_op) if hora_op == "Personalizado" else hora_op
+
+        # ── Produtos ──
+        n_prod = int(st.session_state.get("num_produtos", 0))
+        produtos_data = {}
+        for i in range(1, 15):
+            produtos_data[f"produtos_do_c_{i}"]  = st.session_state.get(f"produtos_do_c_{i}", "")  if i <= n_prod else ""
+            produtos_data[f"ATLAS-do-prod-{i}"]  = st.session_state.get(f"ATLAS-do-prod-{i}", "") if i <= n_prod else ""
+            produtos_data[f"SFMINdoprod_{i}"]    = st.session_state.get(f"SFMINdoprod_{i}", "")   if i <= n_prod else ""
+
         log_obs = st.session_state.get("log_acesso_obs", "")
+
         data = {
+            # Bloco 01
             "razao_social":               razao,
             "nome_fantasia":              st.session_state.get("nome_fantasia", ""),
             "cnpj":                       st.session_state.get("cnpj", ""),
@@ -763,11 +821,14 @@ if st.session_state.get("_gerar"):
             "inscricao_municipal":        st.session_state.get("inscricao_municipal", ""),
             "cnae":                       st.session_state.get("cnae", ""),
             "data_abertura":              fmt_date(st.session_state.get("data_abertura")),
-            "grupo_economico":            st.session_state.get("grupo_economico", ""),
-            "data_inicio_relacionamento": fmt_date(st.session_state.get("data_inicio_relacionamento")),
-            "ctrl_responsavel_biotrop":          st.session_state.get("ctrl_responsavel_biotrop", ""),
-            "ctrl_responsavel_biotrop-email":    st.session_state.get("ctrl_responsavel_biotrop_email", ""),
-            "ctrl_responsavel_biotrop-telefone": st.session_state.get("ctrl_responsavel_biotrop_tel", ""),
+            # Gestor
+            "ctrl_responsavel_biotrop":           gestor_name,
+            "ctrl_responsavel_biotrop-email":     gestor_info.get("email", ""),
+            "ctrl_responsavel_biotrop-telefone":  gestor_info.get("tel", ""),
+            # Campos removidos — limpar placeholders no template
+            "grupo_economico":            "",
+            "data_inicio_relacionamento": "",
+            # Bloco 02
             "end_fiscal_logradouro":  st.session_state.get("end_fiscal_logradouro", ""),
             "end_fiscal_numero":      st.session_state.get("end_fiscal_numero", ""),
             "end_fiscal_complemento": st.session_state.get("end_fiscal_complemento", ""),
@@ -775,57 +836,60 @@ if st.session_state.get("_gerar"):
             "end_fiscal_municipio":   st.session_state.get("end_fiscal_municipio", ""),
             "end_fiscal_estado":      st.session_state.get("end_fiscal_estado", ""),
             "end_fiscal_cep":         st.session_state.get("end_fiscal_cep", ""),
+            # Bloco 03 — contatos (sem Comercial)
             **{k: st.session_state.get(k, "") for k in contatos},
-            "tipo_cliente":        st.session_state.get("tipo_cliente", ""),
-            "culturas_principais": st.session_state.get("culturas_principais", ""),
-            "area_total_ha":       st.session_state.get("area_total_ha", ""),
-            "regiao_atuacao":      st.session_state.get("regiao_atuacao", ""),
-            "produtos_utilizados": st.session_state.get("produtos_utilizados", ""),
+            "com1_nome": "", "com1_cargo": "", "com1_tel": "", "com1_email": "",
+            "com2_nome": "", "com2_cargo": "", "com2_tel": "", "com2_email": "",
+            # Bloco 04 removido (Perfil)
+            "tipo_cliente": "", "culturas_principais": "", "area_total_ha": "",
+            "regiao_atuacao": "", "produtos_utilizados": "",
+            # Bloco 04 (novo) — Comercial
             "condicao_pagamento":   st.session_state.get("condicao_pagamento", ""),
-            "prazo_medio_dias":     st.session_state.get("prazo_medio_dias", ""),
-            "limite_credito":       st.session_state.get("limite_credito", ""),
-            "forma_pagamento":      st.session_state.get("forma_pagamento", ""),
             "politica_bonificacao": st.session_state.get("politica_bonificacao", ""),
             "condicoes_especiais":  st.session_state.get("condicoes_especiais", ""),
-            "fat_data_limite":    st.session_state.get("fat_data_limite", ""),
+            "prazo_medio_dias": "", "limite_credito": "", "forma_pagamento": "",
+            # Bloco 05 — Faturamento
+            "fat_data_limite":    fat_data_limite,
             "fat_exige_po":       st.session_state.get("fat_exige_po", ""),
-            "fat_exige_contrato": st.session_state.get("fat_exige_contrato", ""),
-            "fat_conferencia_nf": st.session_state.get("fat_conferencia_nf", ""),
             "fat_prazo_nf":       st.session_state.get("fat_prazo_nf", ""),
-            "fat_shelf_life":     st.session_state.get("fat_shelf_life", ""),
             "fat_observacoes":    st.session_state.get("fat_observacoes", ""),
-            "log_tipo_entrega":             st.session_state.get("log_tipo_entrega", ""),
-            "log_agendamento":              st.session_state.get("log_agendamento", ""),
-            "log_prazo_agendamento":        st.session_state.get("log_prazo_agendamento", ""),
-            "log_dias_recebimento":         st.session_state.get("log_dias_recebimento", ""),
-            "log_horario_recebimento":      st.session_state.get("log_horario_recebimento", ""),
-            "log_aviso_entrega":            st.session_state.get("log_aviso_entrega", ""),
-            "log_antecedencia_aviso":       st.session_state.get("log_antecedencia_aviso", ""),
-            "log_nf_antecipada":            st.session_state.get("log_nf_antecipada", ""),
-            "log_antecedencia_nf":          st.session_state.get("log_antecedencia_nf", ""),
-            "log_romaneio":                 st.session_state.get("log_romaneio", ""),
-            "log_restricao_transportadora": st.session_state.get("log_restricao_transportadora", ""),
-            "log_regras_acesso":            log_obs,
-            "log_observacoes":              log_obs,
+            "fat_exige_contrato": "", "fat_conferencia_nf": "", "fat_shelf_life": "",
+            # Bloco 05 — Logística
+            "log_tipo_entrega":        st.session_state.get("log_tipo_entrega", ""),
+            "log_agendamento":         st.session_state.get("log_agendamento", ""),
+            "log_prazo_agendamento":   st.session_state.get("log_prazo_agendamento", ""),
+            "log_dias_recebimento":    log_dias,
+            "log_horario_recebimento": log_horario,
+            "log_regras_acesso":       log_obs,
+            "log_observacoes":         log_obs,
+            "log_aviso_entrega": "", "log_antecedencia_aviso": "",
+            "log_nf_antecipada": "", "log_antecedencia_nf": "",
+            "log_romaneio": "", "log_restricao_transportadora": "",
+            # Bloco 06 — Licenças
             **{k: fmt_date(v) if isinstance(v, (date, datetime)) else (v or "")
                for k, v in lic_data.items()},
-            "estrat_concorrentes":     st.session_state.get("estrat_concorrentes", ""),
-            "estrat_potencial_volume": st.session_state.get("estrat_potencial_volume", ""),
-            "estrat_participacao":     st.session_state.get("estrat_participacao", ""),
-            "estrat_historico":        st.session_state.get("estrat_historico", ""),
-            "estrat_risco":            st.session_state.get("estrat_risco", ""),
-            "estrat_observacoes":      st.session_state.get("estrat_observacoes", ""),
-            "compl_classificacao": st.session_state.get("compl_classificacao", ""),
-            "compl_justificativa": st.session_state.get("compl_justificativa", ""),
+            # Bloco 07 — Complexidade
             **{k: (v or "") for k, v in compl_data.items()},
+            "compl_classificacao": "", "compl_justificativa": "",
+            # Informações estratégicas removidas
+            "estrat_concorrentes": "", "estrat_potencial_volume": "",
+            "estrat_participacao": "", "estrat_historico": "",
+            "estrat_risco": "", "estrat_observacoes": "",
+            # Bloco 08 — Crédito
             **{k: fmt_date(v) if isinstance(v, (date, datetime)) else (v or "")
                for k, v in cred_data.items()},
+            # Controle interno
             "ctrl_cadastrado_por":          st.session_state.get("ctrl_cadastrado_por", ""),
             "ctrl_data_cadastro":           fmt_date(st.session_state.get("ctrl_data_cadastro")),
             "ctrl_ultima_atualizacao":      fmt_date(st.session_state.get("ctrl_ultima_atualizacao")),
             "ctrl_responsavel_atualizacao": st.session_state.get("ctrl_responsavel_atualizacao", ""),
             "ctrl_status":                  st.session_state.get("ctrl_status", ""),
+            "ctl_revisadopor":              st.session_state.get("ctrl_revisadopor", ""),
+            "ctl_aprovadopor":              st.session_state.get("ctrl_aprovadopor", ""),
+            # Bloco 09 — Produtos
+            **produtos_data,
         }
+
         for n in range(1, 5):
             for campo in ("id", "municipio_estado", "obs"):
                 data[f"end_entrega_{n}_{campo}"] = st.session_state.get(
